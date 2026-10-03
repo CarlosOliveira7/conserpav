@@ -1,90 +1,165 @@
-# Conserpav - Sistema de Controle de Frequência, Pagamentos e Previsão de Custos
+# Controle de Frequência de Obras
 
-Sistema web inteligente para gerenciamento da frequência de trabalhadores, cálculo automático de pagamentos e previsão de custos de mão de obra, desenvolvido para a **Conserpav**, empresa do segmento de obras e pavimentação.
+## Visão Geral
 
-##  Sobre o Projeto
+O Controle de Frequência de Obras gerencia obras, equipes, registros de presença e fechamento de pagamentos. A aplicação é composta por um frontend em React, uma API em Node.js/Express e um banco de dados **PostgreSQL**. A sincronização em tempo real usa `LISTEN/NOTIFY` do PostgreSQL repassado ao navegador por Server-Sent Events (SSE).
 
-Nas obras da Conserpav, o controle da frequência dos trabalhadores é feito de forma manual, por meio de cadernos, planilhas e anotações do responsável pela obra. Esse processo gera erros de contagem, perda de anotações, retrabalho no fechamento dos pagamentos e dificuldade de consulta ao histórico.
+O sistema adota um modelo de acesso mono-usuário. Toda rota de dados exige um token JWT válido, e o navegador nunca se conecta diretamente ao banco.
 
-O sistema propõe centralizar esse controle, automatizar o cálculo dos pagamentos e, como diferencial, utilizar **Inteligência Artificial** para prever os custos de mão de obra do próximo período de fechamento, com base no histórico da obra.
+> **Versão 2.0:** o backend deixou de usar o Supabase. Veja [Migração do Supabase](#migração-do-supabase) para o que mudou.
 
-> A previsão gerada pela IA tem caráter estimativo e de apoio à decisão, não substituindo a análise do responsável pela obra.
+## Pré-requisitos
 
-##  Problema Identificado
+- **Node.js:** versão 18 ou superior.
+- **PostgreSQL:** versão 13 ou superior (local, via Docker, ou gerenciado: Neon, Render, Railway, etc.).
+- **Docker (opcional):** sobe banco e API com um único comando.
 
-- Registro manual da frequência (dias completos, meios dias e ausências);
-- Consolidação manual dos dias trabalhados;
-- Cálculo manual dos valores a pagar por funcionário;
-- Dificuldade de consulta ao histórico de períodos anteriores;
-- Períodos de fechamento distintos (semanal e quinzenal) dificultando a organização dos dados.
+## Funcionalidades
 
-##  Funcionalidades do MVP
+- **Obras:** cadastre, edite e exclua obras do sistema.
+- **Equipe:** mantenha funcionários com função, diária, obra e chave Pix.
+- **Frequência:** registre ausência, diária completa ou meia diária por dia.
+- **Histórico:** consulte semanas anteriores sem sobrescrever registros existentes.
+- **Pagamentos:** consulte totais por funcionário e copie a chave Pix cadastrada.
+- **Gastos por obra:** registre materiais/despesas, acompanhe valores em aberto, dê baixa e imprima o relatório de gastos pendentes.
+- **Fechamento:** defina períodos semanais ou quinzenais por obra.
+- **Tempo real:** acompanhe alterações feitas em outras abas ou dispositivos.
+- **Conta:** recupere a senha por e-mail.
+- **Interface:** experiência responsiva (mobile-first), acessível e instalável como PWA.
 
-- **Cadastro de obras** — cadastro das obras e definição do período de fechamento (semanal ou quinzenal).
-- **Cadastro de funcionários** — nome, função, valor da diária, obra vinculada e chave Pix.
-- **Registro de frequência** — diária completa, meia diária ou ausência.
-- **Cálculo automático dos pagamentos** — com base nos registros de frequência.
-- **Histórico** — consulta de frequência e pagamentos de períodos anteriores.
-- **Relatório de pagamento** — geração em PDF com funcionário, dias completos, meios dias, ausências, valor total e chave Pix.
-- **Previsão de custos com IA** — estimativa do custo de mão de obra do próximo período, com base no histórico (custo do período anterior, média dos períodos anteriores, previsão atual e variação estimada).
+## Arquitetura
 
-##  Hipótese de Validação
+```
+┌────────────┐  HTTPS/JSON + SSE   ┌──────────────┐   SQL / LISTEN   ┌────────────┐
+│ React SPA  │ ──────────────────▶ │ API Express  │ ───────────────▶ │ PostgreSQL │
+│ (Vercel)   │ ◀────────────────── │ (server/)    │ ◀─────────────── │            │
+└────────────┘   Bearer JWT        └──────────────┘   NOTIFY         └────────────┘
+```
 
-> Se os dados históricos de frequência e pagamentos forem utilizados por uma solução baseada em Inteligência Artificial para prever os custos de mão de obra, então os responsáveis pelas obras poderão antecipar os gastos dos próximos períodos e utilizar essa informação como apoio ao planejamento financeiro.
+### Tecnologias
 
-Indicadores analisados na validação:
+- **Frontend:** React 18, Vite, React Router, lucide-react.
+- **API:** Node.js, Express, `pg` (driver PostgreSQL), `jsonwebtoken`, `bcryptjs`, `nodemailer`.
+- **Banco:** PostgreSQL com triggers `NOTIFY` para tempo real.
+- **PWA:** `manifest.json` e service worker em `public/`.
 
-- Diferença entre o custo previsto e o custo real;
-- Percentual de erro da previsão;
-- Facilidade de compreensão da previsão;
-- Utilidade percebida pelo responsável;
-- Tempo necessário para obter a estimativa;
-- Interesse do usuário em utilizar a funcionalidade.
+### Estrutura
 
-## Tecnologias Utilizadas
+- **`src/`:** frontend (`components/`, `pages/`, `context/`, `lib/`).
+  - **`src/lib/http.js`:** cliente HTTP e armazenamento do token.
+  - **`src/lib/api.js`:** funções de acesso à API (mesmas assinaturas da versão anterior).
+  - **`src/lib/realtime.js`:** assinatura SSE com reconexão automática.
+- **`server/`:** API Node.js (`src/index.js` rotas, `src/auth.js` JWT, `src/events.js` SSE, `scripts/` migração e criação de usuário).
+- **`database/schema.sql`:** schema oficial do PostgreSQL (idempotente).
+- **`docker-compose.yml` e `Dockerfile.api`:** ambiente local com PostgreSQL + API.
+- **`docs/`:** configuração e roteiro de validação.
 
-| Camada | Tecnologia | Utilização |
-|---|---|---|
-| Front-end | React + Vite | Interface web do sistema |
-| Back-end | Supabase | Autenticação, API e gerenciamento dos dados |
-| Banco de Dados | PostgreSQL | Armazenamento de obras, funcionários, frequências e pagamentos |
-| Sincronização | Supabase Realtime | Atualização dos registros entre dispositivos |
-| Hospedagem | Vercel | Publicação e hospedagem da aplicação |
-| Dev. assistido por IA | ChatGPT / Gemini | Apoio à programação, documentação e revisão de código |
-| Análise de dados | Python + Pandas | Organização e tratamento dos dados históricos |
-| Machine Learning | Scikit-learn | Experimentação de modelos para estimativa de custos |
-| Modelo de previsão | Modelos de regressão | Avaliação de ganhos com Machine Learning na previsão |
+## Instalação e execução
 
-##  Cronograma
+### Opção A — Docker (mais rápido)
 
-| Etapa | Atividade | Período |
-|---|---|---|
-| TED 1 | Identificação do problema, modelagem da solução e primeira versão funcional (obras, funcionários, chamada e relatório) | 03/09 |
-| TED 2 | Validação da solução e prototipação (navegação em abas, PWA, tema claro/escuro, período configurável) | 01/10 |
-| TED 3 | Desenvolvimento parcial do MVP (relatório refinado, cabeçalho de impressão, sincronização em tempo real) | 05/11 |
-| TED 4 | Entrega do MVP final e pitch da solução | 03/12 |
+```bash
+docker compose up --build        # sobe PostgreSQL (5432) e API (3001), já aplicando o schema
+docker compose exec api node scripts/create-user.js admin@exemplo.com suaSenha123
+npm install
+npm run dev                      # front-end em http://localhost:5173
+```
 
-## Equipe
+### Opção B — PostgreSQL instalado na máquina
 
-| Nome | Função | RA |
-|---|---|---|
-| Kaio Moreira Morais | Analista de Requisitos e Documentação Técnica | 25.1.06774 |
-| Andrei Pereira Lima | Desenvolvedor Front-End | 25.1 |
-| Carlos Oliveira Lopes | Desenvolvedor Back-End | 25.1.07350 |
-| Priscila Ferreira Dias Santos | Desenvolvedor Back-End | 25.1.01585 |
-| Ywd Rhavell Ferreira Carvalho | Engenheiro de Software / Testes | 25.1.02815 |
+1. **Crie o banco:**
+   ```sql
+   CREATE USER conserpav WITH PASSWORD 'conserpav';
+   CREATE DATABASE conserpav OWNER conserpav;
+   ```
+2. **Configure a API:** copie `server/.env.example` para `server/.env` e ajuste `DATABASE_URL` e `JWT_SECRET`.
+3. **Instale as dependências:**
+   ```bash
+   npm run install:all
+   ```
+4. **Aplique o schema e crie o usuário:**
+   ```bash
+   npm run db:migrate
+   npm run user:create -- admin@exemplo.com suaSenha123
+   ```
+5. **Inicie API e front-end** (dois terminais):
+   ```bash
+   npm run dev:api     # API em http://localhost:3001
+   npm run dev         # front-end em http://localhost:5173 (proxy /api -> 3001)
+   ```
 
-##  Links do Projeto
+Acesse `http://localhost:5173` e entre com o usuário criado.
 
-- **Lean Canvas:** [Canva](https://www.canva.com/design/DAHUJp4ClcA/TFKSxVYON0W8lTrb1oURlQ/edit?ui=eyJBIjp7fX0)
-- **Repositório:** [github.com/CarlosOliveira7/conserpav](https://github.com/CarlosOliveira7/conserpav)
+### Variáveis de ambiente
 
-##  Referências
+**API (`server/.env`)**
 
-- MAURYA, Ash. *Running Lean: iterate from Plan A to a Plan That Works*. 2. ed. Sebastopol: O'Reilly Media, 2016.
-- NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY. *Artificial Intelligence Risk Management Framework (AI RMF 1.0)*. Gaithersburg: NIST, 2023.
-- RUSSELL, Stuart; NORVIG, Peter. *Artificial Intelligence: A Modern Approach*. 4. ed. Hoboken: Pearson, 2021.
+| Variável | Descrição |
+| --- | --- |
+| `DATABASE_URL` | String de conexão do PostgreSQL. |
+| `DATABASE_SSL` | `true` em provedores que exigem SSL. |
+| `JWT_SECRET` | Segredo longo e aleatório para assinar tokens. |
+| `JWT_EXPIRES_IN` | Validade da sessão (padrão `7d`). |
+| `CORS_ORIGIN` | Origens do front-end permitidas (separadas por vírgula). |
+| `APP_URL` | URL do front-end, usada no link de recuperação de senha. |
+| `SMTP_*` | Opcional. Sem SMTP, o link de recuperação aparece no console da API. |
 
----
+**Front-end (`.env`)** — só em produção: `VITE_API_URL=https://sua-api.exemplo.com/api`.
 
-Projeto desenvolvido no âmbito do curso de **Análise e Desenvolvimento de Sistemas** — UNIBALSAS, Balsas - MA, 2026.
+## Utilização
+
+1. **Obras:** cadastre a obra e escolha o fechamento semanal ou quinzenal.
+2. **Equipe:** cadastre os funcionários com função, diária e chave Pix.
+3. **Chamada:** toque no dia de cada funcionário para alternar ausência → diária completa → meia diária.
+4. **Relatórios:** consulte o total por funcionário, copie a chave Pix e gere o PDF de fechamento.
+5. **Configurações:** altere e-mail ou senha (exige a senha atual).
+
+## Modelo de dados
+
+- **`users`:** credenciais (e-mail e hash bcrypt da senha).
+- **`password_resets`:** tokens de recuperação de senha (somente o hash é guardado; expiram em 1 hora).
+- **`proprietarios`:** dados complementares do usuário.
+- **`projects`:** obras e período de fechamento.
+- **`employees`:** funcionários vinculados às obras.
+- **`attendance_records`:** presença por funcionário, semana (`week_start` = segunda-feira) e dia.
+- **`project_expenses`:** gastos vinculados a uma obra, com categoria, quantidade, valor unitário, data, observações e situação de baixa.
+
+## Migração do Supabase
+
+| Antes (Supabase) | Agora (PostgreSQL próprio) |
+| --- | --- |
+| `@supabase/supabase-js` no navegador | API REST própria (`server/`) + `fetch` |
+| Supabase Auth | Tabela `users`, bcrypt e token JWT |
+| RLS nas tabelas | Autorização na API (JWT obrigatório); o banco não é exposto ao navegador |
+| Supabase Realtime | Triggers `NOTIFY` + SSE (`/api/events`) |
+| E-mail de recuperação do Supabase | `nodemailer` (SMTP) com token de uso único |
+| `supabase/schema.sql` | `database/schema.sql` |
+
+**Migrar dados existentes:** exporte as tabelas `projects`, `employees` e `attendance_records` do Supabase (`pg_dump --data-only --table=...` ou CSV) e importe no novo banco após `npm run db:migrate`. Os usuários não são migrados (senhas ficam no Supabase Auth): crie-os com `npm run user:create`.
+
+## Validação
+
+```bash
+npm run lint
+npm run build
+```
+
+Roteiro funcional completo em [`docs/VALIDACAO.md`](./docs/VALIDACAO.md).
+
+## Deploy
+
+- **Front-end (Vercel):** importe o repositório, defina `VITE_API_URL` apontando para a API, build `npm run build`, saída `dist/`. Mantenha o [`vercel.json`](./vercel.json) para o roteamento SPA.
+- **API + banco:** publique `Dockerfile.api` (Render, Railway, Fly.io, VPS) com um PostgreSQL gerenciado. Defina `DATABASE_URL`, `DATABASE_SSL`, `JWT_SECRET`, `CORS_ORIGIN` (domínio da Vercel) e `APP_URL`. O container aplica o schema ao iniciar.
+- **Atenção:** a API precisa de processo contínuo (conexão SSE e `LISTEN`); não use funções serverless para ela.
+
+## Convenções de desenvolvimento
+
+- **Lint e build:** execute `npm run lint` e `npm run build` antes de publicar.
+- **Segredos:** nunca versione `.env`, `server/.env` ou `JWT_SECRET`.
+- **Schema:** mantenha `database/schema.sql` idempotente e documente migrações.
+
+## Referências / Links Úteis
+
+- [`docs/CONFIGURACAO.md`](./docs/CONFIGURACAO.md) — ambiente, autenticação e deploy.
+- [`docs/VALIDACAO.md`](./docs/VALIDACAO.md) — roteiro operacional.
+- [PostgreSQL](https://www.postgresql.org/docs/), [Express](https://expressjs.com/), [React](https://react.dev/), [Vercel](https://vercel.com/docs).
