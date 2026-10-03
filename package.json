@@ -1,0 +1,29 @@
+{
+  "name": "controle-frequencia-obras",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src",
+    "dev:api": "npm --prefix server run dev",
+    "db:migrate": "npm --prefix server run db:migrate",
+    "user:create": "npm --prefix server run user:create --",
+    "install:all": "npm install && npm --prefix server install"
+  },
+  "dependencies": {
+    "lucide-react": "^0.441.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "vite": "^5.4.6"
+  }
+}
