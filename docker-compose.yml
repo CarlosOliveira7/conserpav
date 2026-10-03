@@ -1,0 +1,36 @@
+# Sobe PostgreSQL + API para desenvolvimento local:  docker compose up --build
+# O front-end roda à parte com "npm run dev" (porta 5173) e usa o proxy /api.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: conserpav
+      POSTGRES_PASSWORD: conserpav
+      POSTGRES_DB: conserpav
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conserpav"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://conserpav:conserpav@db:5432/conserpav
+      JWT_SECRET: troque-este-segredo-em-producao
+      CORS_ORIGIN: http://localhost:5173
+      APP_URL: http://localhost:5173
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
