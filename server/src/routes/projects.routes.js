@@ -14,7 +14,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/projects", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const projects = await listProjects(req.user.id);
     res.json(projects);
@@ -23,7 +23,7 @@ router.get("/projects", async (req, res, next) => {
   }
 });
 
-router.post("/projects", validate({ body: projectSchema }), async (req, res, next) => {
+router.post("/", validate({ body: projectSchema }), async (req, res, next) => {
   try {
     const project = await createProject(req.user.id, req.body);
     res.status(201).json(project);
@@ -33,7 +33,7 @@ router.post("/projects", validate({ body: projectSchema }), async (req, res, nex
 });
 
 router.put(
-  "/projects/:id",
+  "/:id",
   validate({ params: idParamSchema, body: projectSchema }),
   async (req, res, next) => {
     try {
@@ -45,7 +45,7 @@ router.put(
   }
 );
 
-router.delete("/projects/:id", validate({ params: idParamSchema }), async (req, res, next) => {
+router.delete("/:id", validate({ params: idParamSchema }), async (req, res, next) => {
   try {
     await deleteProject(req.user.id, req.params.id);
     res.status(204).end();

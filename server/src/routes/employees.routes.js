@@ -14,7 +14,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/employees", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const employees = await listEmployees(req.user.id);
     res.json(employees);
@@ -23,7 +23,7 @@ router.get("/employees", async (req, res, next) => {
   }
 });
 
-router.post("/employees", validate({ body: employeeSchema }), async (req, res, next) => {
+router.post("/", validate({ body: employeeSchema }), async (req, res, next) => {
   try {
     const employee = await createEmployee(req.user.id, req.body);
     res.status(201).json(employee);
@@ -33,7 +33,7 @@ router.post("/employees", validate({ body: employeeSchema }), async (req, res, n
 });
 
 router.put(
-  "/employees/:id",
+  "/:id",
   validate({ params: idParamSchema, body: employeeSchema }),
   async (req, res, next) => {
     try {
@@ -45,7 +45,7 @@ router.put(
   }
 );
 
-router.delete("/employees/:id", validate({ params: idParamSchema }), async (req, res, next) => {
+router.delete("/:id", validate({ params: idParamSchema }), async (req, res, next) => {
   try {
     await deleteEmployee(req.user.id, req.params.id);
     res.status(204).end();

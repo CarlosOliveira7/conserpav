@@ -14,7 +14,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/attendance", validate({ query: getAttendanceQuerySchema }), async (req, res, next) => {
+router.get("/", validate({ query: getAttendanceQuerySchema }), async (req, res, next) => {
   try {
     const records = await getAttendanceForWeeks(req.user.id, req.query.weeks);
     res.json(records);
@@ -23,7 +23,7 @@ router.get("/attendance", validate({ query: getAttendanceQuerySchema }), async (
   }
 });
 
-router.put("/attendance", validate({ body: upsertAttendanceSchema }), async (req, res, next) => {
+router.put("/", validate({ body: upsertAttendanceSchema }), async (req, res, next) => {
   try {
     const record = await upsertAttendance(req.user.id, req.body);
     res.json(record);

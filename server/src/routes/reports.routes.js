@@ -8,7 +8,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/reports", validate({ query: getReportQuerySchema }), async (req, res, next) => {
+router.get("/", validate({ query: getReportQuerySchema }), async (req, res, next) => {
   try {
     const reportData = await generateReport(req.user.id, {
       project_id: req.query.project_id,

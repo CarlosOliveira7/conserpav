@@ -1,8 +1,14 @@
 import "dotenv/config";
 
+const isTest = process.env.NODE_ENV === "test";
+
 const required = (name) => {
   const value = process.env[name];
   if (!value) {
+    if (isTest) {
+      if (name === "DATABASE_URL") return "postgres://postgres:postgres@localhost:5432/test";
+      if (name === "JWT_SECRET") return "test-secret-at-least-32-bytes-long-for-testing-purposes!!";
+    }
     console.error(`[config] Variável de ambiente obrigatória ausente: ${name}`);
     process.exit(1);
   }

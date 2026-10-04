@@ -19,7 +19,7 @@ import {
 
 const router = Router();
 
-router.post("/auth/login", authLimiter, validate({ body: loginSchema }), async (req, res, next) => {
+router.post("/login", authLimiter, validate({ body: loginSchema }), async (req, res, next) => {
   try {
     const result = await loginUser(req.body.email, req.body.password);
     setAuthCookie(res, result.token);
@@ -29,16 +29,16 @@ router.post("/auth/login", authLimiter, validate({ body: loginSchema }), async (
   }
 });
 
-router.post("/auth/logout", (req, res) => {
+router.post("/logout", (req, res) => {
   clearAuthCookie(res);
   res.json({ ok: true });
 });
 
-router.get("/auth/me", requireAuth, (req, res) => {
+router.get("/me", requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
-router.post("/auth/forgot", authLimiter, validate({ body: forgotPasswordSchema }), async (req, res, next) => {
+router.post("/forgot", authLimiter, validate({ body: forgotPasswordSchema }), async (req, res, next) => {
   try {
     const result = await requestPasswordReset(req.body.email);
     res.json(result);
@@ -47,7 +47,7 @@ router.post("/auth/forgot", authLimiter, validate({ body: forgotPasswordSchema }
   }
 });
 
-router.post("/auth/reset", authLimiter, validate({ body: resetPasswordSchema }), async (req, res, next) => {
+router.post("/reset", authLimiter, validate({ body: resetPasswordSchema }), async (req, res, next) => {
   try {
     const result = await resetPasswordWithToken(req.body.token, req.body.password);
     res.json(result);
@@ -57,7 +57,7 @@ router.post("/auth/reset", authLimiter, validate({ body: resetPasswordSchema }),
 });
 
 router.put(
-  "/auth/password",
+  "/password",
   requireAuth,
   authLimiter,
   validate({ body: updatePasswordSchema }),
@@ -72,7 +72,7 @@ router.put(
 );
 
 router.put(
-  "/auth/email",
+  "/email",
   requireAuth,
   authLimiter,
   validate({ body: updateEmailSchema }),

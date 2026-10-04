@@ -14,7 +14,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/expenses", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const expenses = await listExpenses(req.user.id);
     res.json(expenses);
@@ -23,7 +23,7 @@ router.get("/expenses", async (req, res, next) => {
   }
 });
 
-router.post("/expenses", validate({ body: expenseSchema }), async (req, res, next) => {
+router.post("/", validate({ body: expenseSchema }), async (req, res, next) => {
   try {
     const expense = await createExpense(req.user.id, req.body);
     res.status(201).json(expense);
@@ -33,7 +33,7 @@ router.post("/expenses", validate({ body: expenseSchema }), async (req, res, nex
 });
 
 router.put(
-  "/expenses/:id",
+  "/:id",
   validate({ params: idParamSchema, body: expenseSchema }),
   async (req, res, next) => {
     try {
@@ -45,7 +45,7 @@ router.put(
   }
 );
 
-router.delete("/expenses/:id", validate({ params: idParamSchema }), async (req, res, next) => {
+router.delete("/:id", validate({ params: idParamSchema }), async (req, res, next) => {
   try {
     await deleteExpense(req.user.id, req.params.id);
     res.status(204).end();

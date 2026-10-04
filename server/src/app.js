@@ -45,13 +45,13 @@ app.use("/api", csrfProtection);
 
 // Routes
 app.use("/api", healthRoutes);
-app.use("/api", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api", eventsRoutes);
-app.use("/api", projectsRoutes);
-app.use("/api", employeesRoutes);
-app.use("/api", expensesRoutes);
-app.use("/api", attendanceRoutes);
-app.use("/api", reportsRoutes);
+app.use("/api/projects", projectsRoutes);
+app.use("/api/employees", employeesRoutes);
+app.use("/api/expenses", expensesRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/reports", reportsRoutes);
 
 // 404 Handler
 app.use((_req, res) => {
