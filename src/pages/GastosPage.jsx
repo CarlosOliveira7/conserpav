@@ -3,6 +3,9 @@ import { Wallet, Plus, Trash2, PencilLine, Printer, CheckCircle2 } from "lucide-
 import { useApp } from "../context/AppContext";
 import PageHeader from "../components/PageHeader";
 import ProjectSelect from "../components/ProjectSelect";
+import Field from "../components/Field";
+import Input from "../components/Input";
+import Textarea from "../components/Textarea";
 import { formatCurrency } from "../lib/format";
 import { useToast } from "../context/ToastContext";
 
@@ -164,49 +167,41 @@ export default function GastosPage() {
             <p className="form-helper">Registre materiais ou despesas vinculados a esta obra.</p>
 
             <div className="form-grid">
-              <div className="span-2">
-                <label className="field-label" htmlFor="expense-description">Nome do produto</label>
-                <input
+              <Field label="Nome do produto" htmlFor="expense-description" className="span-2" required>
+                <Input
                   id="expense-description"
-                  className="field"
                   type="text"
                   value={form.description}
                   onChange={updateField("description")}
                   placeholder="Ex.: Cimento, areia, tijolo, brita..."
                   required
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="field-label" htmlFor="expense-category">Categoria</label>
-                <input
+              <Field label="Categoria" htmlFor="expense-category" required>
+                <Input
                   id="expense-category"
-                  className="field"
                   type="text"
                   value={form.category}
                   onChange={updateField("category")}
                   placeholder="Ex.: Material"
                   required
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="field-label" htmlFor="expense-spentAt">Data</label>
-                <input
+              <Field label="Data" htmlFor="expense-spentAt" required>
+                <Input
                   id="expense-spentAt"
-                  className="field"
                   type="date"
                   value={form.spentAt}
                   onChange={updateField("spentAt")}
                   required
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="field-label" htmlFor="expense-quantity">Quantidade</label>
-                <input
+              <Field label="Quantidade" htmlFor="expense-quantity" required>
+                <Input
                   id="expense-quantity"
-                  className="field"
                   type="number"
                   min="0.01"
                   step="0.01"
@@ -214,13 +209,11 @@ export default function GastosPage() {
                   onChange={updateField("quantity")}
                   required
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="field-label" htmlFor="expense-unitValue">Valor unitário</label>
-                <input
+              <Field label="Valor unitário" htmlFor="expense-unitValue" required>
+                <Input
                   id="expense-unitValue"
-                  className="field"
                   type="number"
                   min="0.01"
                   step="0.01"
@@ -228,32 +221,28 @@ export default function GastosPage() {
                   onChange={updateField("unitValue")}
                   required
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="field-label" htmlFor="expense-total">Total</label>
-                <input
+              <Field label="Total" htmlFor="expense-total">
+                <Input
                   id="expense-total"
-                  className="field"
                   type="number"
                   min="0"
                   step="0.01"
                   value={form.total}
                   readOnly
                 />
-              </div>
+              </Field>
 
-              <div className="span-2">
-                <label className="field-label" htmlFor="expense-notes">Descrição/observação</label>
-                <textarea
+              <Field label="Descrição/observação" htmlFor="expense-notes" className="span-2">
+                <Textarea
                   id="expense-notes"
-                  className="field field-textarea"
                   value={form.notes}
                   onChange={updateField("notes")}
                   rows={3}
                   placeholder="Ex.: Fornecedor Casa do Construtor..."
                 />
-              </div>
+              </Field>
             </div>
 
             <div className="expense-form-actions">
