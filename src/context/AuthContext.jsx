@@ -1,26 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import * as api from "../lib/api";
-import { clearToken, getToken } from "../lib/http";
 
 const AuthContext = createContext(null);
 
-// ALTERAÇÃO (migração Supabase -> PostgreSQL próprio): a sessão agora é um token
-// JWT emitido pela API (guardado em localStorage). Ao abrir o app, validamos o
-// token com GET /auth/me; se a API responder 401 em qualquer momento, o evento
-// "auth:expired" (disparado em lib/http.js) leva o usuário de volta ao login.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Restaura a sessão ao carregar
+  // Restaura a sessão ao carregar via cookie httpOnly
   useEffect(() => {
     let cancelled = false;
-
-    if (!getToken()) {
-      setLoading(false);
-      return undefined;
-    }
 
     api.fetchCurrentUser().then(({ data }) => {
       if (cancelled) return;
@@ -66,7 +56,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     setError(null);
     setUser(null);
-    clearToken();
+    await api.signOut();
     return { ok: true };
   }, []);
 

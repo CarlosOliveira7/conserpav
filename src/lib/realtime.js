@@ -1,15 +1,8 @@
-import { API_URL, clearToken, getToken } from "./http";
+import { API_URL } from "./http";
 
 /**
- * Tempo real: abre uma conexão Server-Sent Events com a API (GET /events) e
- * entrega cada mudança de tabela como { table, eventType, new, old } — o mesmo
- * formato que o Supabase Realtime usava, então o AppContext quase não muda.
- *
- * Usa fetch em vez de EventSource para poder enviar o cabeçalho Authorization.
- * Reconecta sozinho; em reconexões chama onReconnect() para o app recarregar os
- * dados que possam ter mudado enquanto a conexão estava fora.
- *
- * Retorna uma função que encerra a assinatura.
+ * Conexão SSE com a API (GET /events) que entrega alterações em tempo real via fetch + stream,
+ * autenticada automaticamente pelo cookie httpOnly.
  */
 export function subscribeToChanges({ onChange, onReconnect }) {
   let stopped = false;
@@ -23,12 +16,15 @@ export function subscribeToChanges({ onChange, onReconnect }) {
       try {
         controller = new AbortController();
         const response = await fetch(`${API_URL}/events`, {
-          headers: { Authorization: `Bearer ${getToken()}`, Accept: "text/event-stream" },
+          headers: {
+            Accept: "text/event-stream",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          credentials: "include",
           signal: controller.signal,
         });
 
         if (response.status === 401) {
-          clearToken();
           window.dispatchEvent(new Event("auth:expired"));
           return;
         }

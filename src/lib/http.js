@@ -1,43 +1,13 @@
-// Cliente HTTP da API própria (Node + PostgreSQL). Substitui o antigo cliente Supabase.
-// Em desenvolvimento, o Vite encaminha "/api" para http://localhost:3001 (vite.config.js).
-// Em produção, defina VITE_API_URL com a URL pública da API.
 export const API_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 
-const TOKEN_KEY = "obra-frequencia-token";
-
-export function getToken() {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setToken(token) {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch {
-    /* armazenamento indisponível: a sessão vale apenas até recarregar */
-  }
-}
-
-export function clearToken() {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    /* ignora */
-  }
-}
-
 /**
- * Faz uma requisição JSON. Nunca lança exceção: devolve { data, error }.
- * Se a API responder 401 com um token salvo (sessão expirada), limpa o token e
- * dispara o evento "auth:expired" para o AuthContext levar o usuário ao login.
+ * Faz uma requisição JSON enviando cookies httpOnly e o cabeçalho X-Requested-With (CSRF).
+ * Devolve { data, error } sem lançar exceção.
  */
 export async function request(method, path, body, { skipExpire = false } = {}) {
-  const headers = {};
-  const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
+  const headers = {
+    "X-Requested-With": "XMLHttpRequest",
+  };
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
   let response;
@@ -45,6 +15,7 @@ export async function request(method, path, body, { skipExpire = false } = {}) {
     response = await fetch(`${API_URL}${path}`, {
       method,
       headers,
+      credentials: "include",
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
@@ -61,11 +32,11 @@ export async function request(method, path, body, { skipExpire = false } = {}) {
   }
 
   if (!response.ok) {
-    if (response.status === 401 && token && !skipExpire) {
-      clearToken();
+    if (response.status === 401 && !skipExpire) {
       window.dispatchEvent(new Event("auth:expired"));
     }
-    return { data: null, error: new Error(payload?.error || "Erro ao comunicar com o servidor.") };
+    const errorMessage = payload?.error?.message || (typeof payload?.error === "string" ? payload.error : "Erro ao comunicar com o servidor.");
+    return { data: null, error: new Error(errorMessage) };
   }
 
   return { data: payload, error: null };
