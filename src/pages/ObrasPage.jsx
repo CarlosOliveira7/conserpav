@@ -1,4 +1,4 @@
-import { Building2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ProjectForm from "../components/ProjectForm";
@@ -9,15 +9,15 @@ export default function ObrasPage() {
 
   return (
     <div className="page">
-      <PageHeader icon={Building2} eyebrow="Obras" title="Obras" />
+      <PageHeader title="Obras" />
       <div className="project-register-toolbar">
         <button
           type="button"
-          className="primary-button register-button"
+          className={formOpen ? "secondary-button" : "primary-button register-button"}
           onClick={() => setFormOpen((current) => !current)}
         >
           <Plus size={18} aria-hidden="true" />
-          {formOpen ? "Fechar cadastro" : "Cadastrar obra"}
+          {formOpen ? "Fechar cadastro" : "Nova obra"}
         </button>
       </div>
       {formOpen && <ProjectForm />}
