@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import Field from "./Field";
+import Input from "./Input";
+import Select from "./Select";
 
 const EMPTY_FORM = { name: "", role: "", dailyRate: "", projectId: "", pixKey: "" };
 
@@ -44,43 +47,31 @@ export default function EmployeeForm({ onCreated }) {
       )}
 
       <div className="form-grid">
-        <div className="span-2">
-          <label className="field-label" htmlFor="employee-name">
-            Nome completo
-          </label>
-          <input
+        <Field label="Nome completo" htmlFor="employee-name" className="span-2" required>
+          <Input
             id="employee-name"
-            className="field"
             type="text"
             value={form.name}
             onChange={updateField("name")}
             required
             maxLength={80}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className="field-label" htmlFor="employee-role">
-            Função / patente
-          </label>
-          <input
+        <Field label="Função / patente" htmlFor="employee-role" required>
+          <Input
             id="employee-role"
-            className="field"
             type="text"
             value={form.role}
             onChange={updateField("role")}
             required
             maxLength={60}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className="field-label" htmlFor="employee-rate">
-            Valor da diária (R$)
-          </label>
-          <input
+        <Field label="Valor da diária (R$)" htmlFor="employee-rate" required>
+          <Input
             id="employee-rate"
-            className="field"
             type="number"
             min="0.01"
             step="0.01"
@@ -88,15 +79,11 @@ export default function EmployeeForm({ onCreated }) {
             onChange={updateField("dailyRate")}
             required
           />
-        </div>
+        </Field>
 
-        <div className="span-2">
-          <label className="field-label" htmlFor="employee-project">
-            Obra vinculada
-          </label>
-          <select
+        <Field label="Obra vinculada" htmlFor="employee-project" className="span-2" required>
+          <Select
             id="employee-project"
-            className="field"
             value={form.projectId}
             onChange={updateField("projectId")}
             required
@@ -110,24 +97,25 @@ export default function EmployeeForm({ onCreated }) {
                 {project.name}
               </option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </Field>
 
-        <div className="span-2">
-          <label className="field-label" htmlFor="employee-pix">
-            Chave Pix do funcionário
-          </label>
-          <input
+        <Field
+          label="Chave Pix do funcionário"
+          htmlFor="employee-pix"
+          hint="A chave será exibida no fechamento para o pagamento."
+          className="span-2"
+          required
+        >
+          <Input
             id="employee-pix"
-            className="field"
             type="text"
             value={form.pixKey}
             onChange={updateField("pixKey")}
             required
             maxLength={140}
           />
-          <p className="field-hint">A chave será exibida no fechamento para o pagamento.</p>
-        </div>
+        </Field>
       </div>
 
       <button

@@ -1,5 +1,8 @@
 import { useState } from "react";
 import Modal from "./Modal";
+import Field from "./Field";
+import Input from "./Input";
+import Select from "./Select";
 import { useApp } from "../context/AppContext";
 
 export default function EditEmployeeModal({ employee, onClose }) {
@@ -38,43 +41,31 @@ export default function EditEmployeeModal({ employee, onClose }) {
     >
       <form id="edit-employee-form" onSubmit={handleSubmit}>
         <div className="form-grid">
-          <div className="span-2">
-            <label className="field-label" htmlFor="edit-employee-name">
-              Nome completo
-            </label>
-            <input
+          <Field label="Nome completo" htmlFor="edit-employee-name" className="span-2" required>
+            <Input
               id="edit-employee-name"
-              className="field"
               type="text"
               value={form.name}
               onChange={updateField("name")}
               required
               maxLength={80}
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="field-label" htmlFor="edit-employee-role">
-              Função / patente
-            </label>
-            <input
+          <Field label="Função / patente" htmlFor="edit-employee-role" required>
+            <Input
               id="edit-employee-role"
-              className="field"
               type="text"
               value={form.role}
               onChange={updateField("role")}
               required
               maxLength={60}
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="field-label" htmlFor="edit-employee-rate">
-              Valor da diária (R$)
-            </label>
-            <input
+          <Field label="Valor da diária (R$)" htmlFor="edit-employee-rate" required>
+            <Input
               id="edit-employee-rate"
-              className="field"
               type="number"
               min="0.01"
               step="0.01"
@@ -82,15 +73,11 @@ export default function EditEmployeeModal({ employee, onClose }) {
               onChange={updateField("dailyRate")}
               required
             />
-          </div>
+          </Field>
 
-          <div className="span-2">
-            <label className="field-label" htmlFor="edit-employee-project">
-              Obra vinculada
-            </label>
-            <select
+          <Field label="Obra vinculada" htmlFor="edit-employee-project" className="span-2" required>
+            <Select
               id="edit-employee-project"
-              className="field"
               value={form.projectId}
               onChange={updateField("projectId")}
               required
@@ -100,25 +87,20 @@ export default function EditEmployeeModal({ employee, onClose }) {
                   {project.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
 
-          <div className="span-2">
-            <label className="field-label" htmlFor="edit-employee-pix">
-              Chave Pix do funcionário
-            </label>
-            <input
+          <Field label="Chave Pix do funcionário" htmlFor="edit-employee-pix" className="span-2" required>
+            <Input
               id="edit-employee-pix"
-              className="field"
               type="text"
               value={form.pixKey}
               onChange={updateField("pixKey")}
               required
               maxLength={140}
             />
-          </div>
+          </Field>
         </div>
-
       </form>
     </Modal>
   );
