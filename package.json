@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src",
+    "test": "vitest run && npm --prefix server test",
     "dev:api": "npm --prefix server run dev",
     "db:migrate": "npm --prefix server run db:migrate",
     "user:create": "npm --prefix server run user:create --",
@@ -24,6 +25,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
-    "vite": "^5.4.6"
+    "vite": "^5.4.6",
+    "vitest": "^2.1.9"
   }
 }
