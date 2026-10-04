@@ -2,37 +2,48 @@
 
 Sistema para gestão de frequência, fechamento de pagamentos e controle de despesas de equipes de obras da empresa **Conserpav**. Desenvolvido como projeto acadêmico do curso de Análise e Desenvolvimento de Sistemas (ADS) do **Centro Universitário UNIBALSAS**.
 
+## Sobre o Projeto
+
+O sistema centraliza o acompanhamento das obras e equipes, substituindo registros manuais de frequência e cálculos feitos em cadernos ou planilhas. Com os registros organizados por período, os responsáveis podem consultar o histórico e gerar o fechamento de pagamentos com os valores devidos a cada funcionário.
+
+### Funcionalidades
+
+- Cadastro de obras com período de fechamento semanal ou quinzenal.
+- Cadastro de funcionários, funções, valores de diária e chaves Pix.
+- Registro de diárias completas, meias diárias e ausências.
+- Cálculo automático dos pagamentos e consulta do histórico por período.
+- Geração e impressão do relatório de pagamento.
+- Registro e acompanhamento de despesas por obra.
+- Sincronização de atualizações entre dispositivos.
+
+## Participantes
+
+Projeto desenvolvido no curso de Análise e Desenvolvimento de Sistemas do Centro Universitário UNIBALSAS.
+
+- Kaio Moreira Morais (RA 25.1.06774): análise de requisitos e documentação técnica.
+- Andrei Pereira Lima (RA 25.1): desenvolvimento front-end.
+- Carlos Oliveira Lopes (RA 25.1.07350): desenvolvimento back-end.
+- Priscila Ferreira Dias Santos (RA 25.1.01585): desenvolvimento back-end.
+- Ywd Rhavell Ferreira Carvalho (RA 25.1.02815): engenharia de software e testes.
+
+## Links do Projeto
+
+- **Lean Canvas:** [Acessar no Canva](https://www.canva.com/design/DAHUJp4ClcA/TFKSxVYON0W8lTrb1oURlQ/edit?ui=eyJBIjp7fX0)
+- **Repositório:** [github.com/CarlosOliveira7/conserpav](https://github.com/CarlosOliveira7/conserpav)
+
 ---
 
-## 🏗 Arquitetura do Sistema
+## Arquitetura
 
-```
-                  ┌──────────────────────────────────────────────┐
-                  │          Navegador / Dispositivo PWA         │
-                  │             (React 18 + Vite SPA)            │
-                  └──────────────────────┬───────────────────────┘
-                                         │  HTTPS / Cookies httpOnly / SSE
-                                         ▼
-                  ┌──────────────────────────────────────────────┐
-                  │             API REST Express.js              │
-                  │   Camadas: Routes ➔ Middlewares ➔ Services   │
-                  │   Segurança: Helmet, Rate-Limit, CSRF, Zod   │
-                  └──────────────────────┬───────────────────────┘
-                                         │  pg.Pool (Singleton) + LISTEN Client
-                                         ▼
-                  ┌──────────────────────────────────────────────┐
-                  │              PostgreSQL 16                   │
-                  │   Constraints, Triggers e pg_notify          │
-                  └──────────────────────────────────────────────┘
-```
+O navegador executa uma aplicação React que se comunica por HTTPS com uma API REST em Express. A API autentica as sessões por cookies `httpOnly`, valida entradas com Zod e acessa o PostgreSQL por meio de um `pg.Pool` compartilhado. Eventos de atualização são distribuídos por Server-Sent Events (SSE), alimentados por notificações PostgreSQL (`LISTEN/NOTIFY`).
 
-- **Frontend**: Single Page Application em React 18, Vite 5, React Router 6 e Lucide Icons. Mobile-first com suporte a Progressive Web App (PWA) e impressão direta de relatórios.
-- **Backend**: API REST em Node.js (Express), estruturada em camadas com validação estrita (Zod), autenticação via cookies `httpOnly`, logging com Pino e encerramento gracioso (graceful shutdown).
-- **Banco de Dados**: PostgreSQL 16 com sistema de migrações transacionais versionadas (`schema_migrations`), triggers de tempo real (`LISTEN/NOTIFY`) e constraints de integridade relacional.
+- **Front-end:** React 18, Vite 5, React Router 6 e Lucide. Aplicação responsiva com suporte a PWA e impressão de relatórios.
+- **Back-end:** Node.js e Express, organizado em rotas, middlewares e serviços. Inclui Helmet, proteção CSRF, rate limiting, logging com Pino e encerramento gracioso.
+- **Banco de dados:** PostgreSQL 16, migrações transacionais versionadas, constraints e triggers.
 
 ---
 
-## 🚀 Como Executar o Projeto
+## Execução do Projeto
 
 ### Pré-requisitos
 - Node.js >= 18.0.0
@@ -41,7 +52,7 @@ Sistema para gestão de frequência, fechamento de pagamentos e controle de desp
 
 ---
 
-### Opção 1: Execução Local com Docker Compose
+### Docker Compose
 
 Suba o banco de dados e a API automaticamente:
 
@@ -60,7 +71,7 @@ Acesse a aplicação em `http://localhost:5173`.
 
 ---
 
-### Opção 2: Desenvolvimento Local Manual
+### Desenvolvimento Local Manual
 
 1. **Instalar dependências de todo o projeto:**
    ```bash
@@ -80,7 +91,7 @@ Acesse a aplicação em `http://localhost:5173`.
 
 4. **Criar um usuário administrador inicial:**
    ```bash
-   npm run user:create -- admin@conserpav.com.br MinhaSenhaForte123
+   npm run user:create -- <email> <senha>
    ```
 
 5. **Iniciar os servidores de desenvolvimento:**
@@ -95,42 +106,32 @@ Acesse a aplicação em `http://localhost:5173`.
 
 ---
 
-## 📋 Scripts Disponíveis
+## Scripts
 
-| Comando | Descrição |
-| :--- | :--- |
-| `npm run dev` | Inicia o servidor de desenvolvimento do Vite (Frontend) |
-| `npm run dev:api` | Inicia a API Express em modo watch com Node.js |
-| `npm run build` | Compila o frontend para produção (`dist/`) |
-| `npm run lint` | Executa a verificação estática de código com ESLint |
-| `npm test` | Executa a suíte de testes unitários e de integração (Vitest) |
-| `npm run db:migrate` | Aplica migrações versionadas pendentes no banco |
-| `npm run user:create -- <email> <senha>` | Cria ou redefine senha de um administrador |
-| `npm run install:all` | Instala dependências do frontend e do backend |
+- `npm run dev`: inicia o servidor Vite do front-end.
+- `npm run dev:api`: inicia a API Express em modo de desenvolvimento.
+- `npm run build`: compila o front-end para `dist/`.
+- `npm run lint`: executa o ESLint em `src/`.
+- `npm test`: executa os testes do front-end e do servidor.
+- `npm run db:migrate`: aplica as migrações pendentes.
+- `npm run user:create -- <email> <senha>`: cria ou redefine um usuário administrador.
+- `npm run install:all`: instala as dependências do front-end e do back-end.
 
----
-
-## 🔒 Variáveis de Ambiente
+## Variáveis de Ambiente
 
 As configurações do backend ficam centralizadas no arquivo `server/.env`:
 
-| Variável | Obrigatória | Descrição | Exemplo |
-| :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | Sim | String de conexão com o PostgreSQL | `postgres://user:pass@localhost:5432/conserpav` |
-| `DATABASE_SSL` | Não | Habilita SSL para conexão de banco (`true`/`false`) | `false` |
-| `JWT_SECRET` | Sim | Chave de assinatura JWT (mínimo 32 caracteres) | `sua-chave-secreta-com-pelo-menos-32-chars` |
-| `PORT` | Não | Porta do servidor da API (padrão: 3001) | `3001` |
-| `CORS_ORIGIN` | Não | Origens permitidas separadas por vírgula | `http://localhost:5173` |
-| `APP_URL` | Não | URL pública do frontend para links de e-mail | `http://localhost:5173` |
-| `SMTP_HOST` | Não | Servidor SMTP para recuperação de senha | `smtp.provedor.com` |
-| `SMTP_PORT` | Não | Porta SMTP | `587` |
-| `SMTP_USER` | Não | Usuário do SMTP | `usuario@provedor.com` |
-| `SMTP_PASS` | Não | Senha do SMTP | `senha` |
-| `SMTP_FROM` | Não | Remetente de e-mails do sistema | `nao-responda@conserpav.com.br` |
+- `DATABASE_URL` (obrigatória): string de conexão com o PostgreSQL.
+- `JWT_SECRET` (obrigatória): chave de assinatura JWT com pelo menos 32 caracteres.
+- `DATABASE_SSL` (opcional): habilita SSL para a conexão com o banco (`true` ou `false`).
+- `PORT` (opcional): porta da API; padrão `3001`.
+- `CORS_ORIGIN` (opcional): origens permitidas, separadas por vírgula.
+- `APP_URL` (opcional): URL pública do front-end, usada em links de e-mail.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM` (opcionais): configuração do envio de e-mails para recuperação de senha.
 
----
+As variáveis devem ser configuradas em `server/.env`, com base em `server/.env.example`.
 
-## 🗺 Mapa de Rotas da API
+## Rotas da API
 
 ### Públicas / Saúde
 - `GET  /api/health` — Verificação de status e conexão com o banco
@@ -174,7 +175,7 @@ As configurações do backend ficam centralizadas no arquivo `server/.env`:
 
 ---
 
-## 📚 Documentação Complementar
+## Documentação Complementar
 
 - [Relatório de Auditoria](docs/AUDITORIA.md)
 - [Decisões de Arquitetura (ADRs)](docs/DECISOES.md)
