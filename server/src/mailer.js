@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { config } from "./config.js";
+import { logger } from "./logger.js";
 
 const transporter = config.smtp.host
   ? nodemailer.createTransport({
@@ -10,10 +11,15 @@ const transporter = config.smtp.host
     })
   : null;
 
+function maskEmail(email) {
+  if (!email || !email.includes("@")) return "***";
+  const [name, domain] = email.split("@");
+  return `${name[0]}***@${domain}`;
+}
+
 export async function sendPasswordResetEmail(to, link) {
   if (!transporter) {
-    // Sem SMTP configurado (ex.: desenvolvimento): mostra o link no console da API.
-    console.log(`[mailer] SMTP não configurado. Link de recuperação para ${to}:\n  ${link}`);
+    logger.info(`[mailer] SMTP não configurado. Link de recuperação gerado para ${maskEmail(to)}:\n  ${link}`);
     return;
   }
   await transporter.sendMail({

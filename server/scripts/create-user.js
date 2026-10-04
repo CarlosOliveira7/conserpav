@@ -9,6 +9,12 @@ if (!email || !password || password.length < 8) {
   process.exit(1);
 }
 
+function maskEmail(emailStr) {
+  if (!emailStr || !emailStr.includes("@")) return "***";
+  const [name, domain] = emailStr.split("@");
+  return `${name[0]}***@${domain}`;
+}
+
 try {
   const hash = await bcrypt.hash(password, 12);
   const { rows } = await pool.query(
@@ -21,7 +27,7 @@ try {
     "insert into proprietarios (id) values ($1) on conflict (id) do nothing",
     [rows[0].id]
   );
-  console.log(`✔ Usuário pronto: ${rows[0].email}`);
+  console.log(`✔ Usuário pronto: ${maskEmail(rows[0].email)}`);
 } catch (err) {
   console.error("✘ Erro:", err.message);
   process.exitCode = 1;
