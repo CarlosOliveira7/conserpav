@@ -13,6 +13,7 @@ import eventsRoutes from "./routes/events.routes.js";
 import expensesRoutes from "./routes/expenses.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
+import reportsRoutes from "./routes/reports.routes.js";
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/api", projectsRoutes);
 app.use("/api", employeesRoutes);
 app.use("/api", expensesRoutes);
 app.use("/api", attendanceRoutes);
+app.use("/api", reportsRoutes);
 
 // 404 Handler
 app.use((_req, res) => {
