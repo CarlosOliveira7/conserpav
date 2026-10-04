@@ -1,6 +1,6 @@
--- Controle de Frequência de Obras — schema do banco (PostgreSQL puro)
--- Pode ser executado várias vezes com segurança (idempotente).
--- Uso: npm run db:migrate (dentro de /server) ou psql "$DATABASE_URL" -f database/schema.sql
+-- Migração 001: schema baseline (estado inicial pós-migração do Supabase)
+-- Idempotente: usa IF NOT EXISTS / CREATE OR REPLACE em todas as instruções.
+-- As migrações seguintes (002+) adicionam colunas e constraints incrementalmente.
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -37,19 +37,18 @@ CREATE TABLE IF NOT EXISTS proprietarios (
 );
 
 -- ========== OBRAS ==========
+-- owner_id é adicionado na migração 002.
 CREATE TABLE IF NOT EXISTS projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   name text NOT NULL,
+  -- 'semanal' fecha a cada 1 semana (seg-sáb); 'quinzenal' a cada 2 semanas.
   closing_period text NOT NULL DEFAULT 'quinzenal'
     CHECK (closing_period IN ('semanal', 'quinzenal')),
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS projects_owner_name_unique ON projects (owner_id, lower(name));
-CREATE INDEX IF NOT EXISTS projects_owner_id_idx ON projects (owner_id);
 
 -- ========== FUNCIONÁRIOS ==========
+-- updated_at é adicionado na migração 003.
 CREATE TABLE IF NOT EXISTS employees (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id uuid NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
@@ -57,18 +56,18 @@ CREATE TABLE IF NOT EXISTS employees (
   role text NOT NULL,
   daily_rate numeric(10, 2) NOT NULL CHECK (daily_rate > 0),
   pix_key text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS employees_project_id_idx ON employees (project_id);
 CREATE UNIQUE INDEX IF NOT EXISTS employees_unique_name_per_project
   ON employees (project_id, lower(name));
 
 -- ========== FREQUÊNCIA (CHAMADA) ==========
+-- CHECK de week_start como segunda-feira é adicionado na migração 003.
 CREATE TABLE IF NOT EXISTS attendance_records (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_id uuid NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-  week_start date NOT NULL CONSTRAINT attendance_week_start_monday_check CHECK (EXTRACT(ISODOW FROM week_start) = 1),
+  week_start date NOT NULL,
   day text NOT NULL CHECK (day IN ('seg', 'ter', 'qua', 'qui', 'sex', 'sab')),
   status text NOT NULL CHECK (status IN ('absent', 'full', 'half')) DEFAULT 'absent',
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -76,7 +75,6 @@ CREATE TABLE IF NOT EXISTS attendance_records (
 );
 CREATE INDEX IF NOT EXISTS attendance_week_idx ON attendance_records (week_start);
 CREATE INDEX IF NOT EXISTS attendance_employee_idx ON attendance_records (employee_id);
-CREATE INDEX IF NOT EXISTS attendance_employee_week_idx ON attendance_records (employee_id, week_start);
 
 -- ========== GASTOS POR OBRA ==========
 CREATE TABLE IF NOT EXISTS project_expenses (
@@ -96,94 +94,35 @@ CREATE TABLE IF NOT EXISTS project_expenses (
 CREATE INDEX IF NOT EXISTS project_expenses_project_idx ON project_expenses (project_id);
 CREATE INDEX IF NOT EXISTS project_expenses_date_idx ON project_expenses (spent_at);
 
--- ========== TRIGGERS UPDATED_AT ==========
-CREATE OR REPLACE FUNCTION update_timestamp_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = now();
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS set_employees_updated_at ON employees;
-CREATE TRIGGER set_employees_updated_at BEFORE UPDATE ON employees FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-
-DROP TRIGGER IF EXISTS set_projects_updated_at ON projects;
-CREATE TRIGGER set_projects_updated_at BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-
 -- ========== TEMPO REAL (LISTEN/NOTIFY) ==========
+-- Payload ampliado com owner_id na migração 004.
 CREATE OR REPLACE FUNCTION notify_table_change() RETURNS trigger AS $$
 DECLARE
   payload json;
-  row_data record;
-  owner_uuid uuid;
-  new_clean json;
-  old_clean json;
 BEGIN
-  row_data := CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
-
-  IF TG_TABLE_NAME = 'projects' THEN
-    owner_uuid := row_data.owner_id;
-  ELSIF TG_TABLE_NAME = 'employees' THEN
-    SELECT owner_id INTO owner_uuid FROM projects WHERE id = row_data.project_id;
-  ELSIF TG_TABLE_NAME = 'project_expenses' THEN
-    SELECT owner_id INTO owner_uuid FROM projects WHERE id = row_data.project_id;
-  ELSIF TG_TABLE_NAME = 'attendance_records' THEN
-    SELECT p.owner_id INTO owner_uuid 
-      FROM employees e 
-      JOIN projects p ON p.id = e.project_id 
-     WHERE e.id = row_data.employee_id;
-  END IF;
-
-  IF TG_TABLE_NAME = 'employees' THEN
-    IF NEW IS NOT NULL THEN
-      new_clean := json_build_object(
-        'id', NEW.id,
-        'project_id', NEW.project_id,
-        'name', NEW.name,
-        'role', NEW.role,
-        'daily_rate', NEW.daily_rate,
-        'created_at', NEW.created_at,
-        'updated_at', NEW.updated_at
-      );
-    END IF;
-    IF OLD IS NOT NULL THEN
-      old_clean := json_build_object(
-        'id', OLD.id,
-        'project_id', OLD.project_id,
-        'name', OLD.name,
-        'role', OLD.role,
-        'daily_rate', OLD.daily_rate,
-        'created_at', OLD.created_at,
-        'updated_at', OLD.updated_at
-      );
-    END IF;
-  ELSE
-    new_clean := CASE WHEN TG_OP = 'DELETE' THEN NULL ELSE row_to_json(NEW) END;
-    old_clean := CASE WHEN TG_OP = 'INSERT' THEN NULL ELSE row_to_json(OLD) END;
-  END IF;
-
   payload := json_build_object(
     'table', TG_TABLE_NAME,
     'eventType', TG_OP,
-    'owner_id', owner_uuid,
-    'new', new_clean,
-    'old', old_clean
+    'new', CASE WHEN TG_OP = 'DELETE' THEN NULL ELSE row_to_json(NEW) END,
+    'old', CASE WHEN TG_OP = 'INSERT' THEN NULL ELSE row_to_json(OLD) END
   );
-
   PERFORM pg_notify('table_changes', payload::text);
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS projects_notify ON projects;
-CREATE TRIGGER projects_notify AFTER INSERT OR UPDATE OR DELETE ON projects FOR EACH ROW EXECUTE FUNCTION notify_table_change();
+CREATE TRIGGER projects_notify AFTER INSERT OR UPDATE OR DELETE ON projects
+  FOR EACH ROW EXECUTE FUNCTION notify_table_change();
 
 DROP TRIGGER IF EXISTS employees_notify ON employees;
-CREATE TRIGGER employees_notify AFTER INSERT OR UPDATE OR DELETE ON employees FOR EACH ROW EXECUTE FUNCTION notify_table_change();
+CREATE TRIGGER employees_notify AFTER INSERT OR UPDATE OR DELETE ON employees
+  FOR EACH ROW EXECUTE FUNCTION notify_table_change();
 
 DROP TRIGGER IF EXISTS attendance_notify ON attendance_records;
-CREATE TRIGGER attendance_notify AFTER INSERT OR UPDATE OR DELETE ON attendance_records FOR EACH ROW EXECUTE FUNCTION notify_table_change();
+CREATE TRIGGER attendance_notify AFTER INSERT OR UPDATE OR DELETE ON attendance_records
+  FOR EACH ROW EXECUTE FUNCTION notify_table_change();
 
 DROP TRIGGER IF EXISTS project_expenses_notify ON project_expenses;
-CREATE TRIGGER project_expenses_notify AFTER INSERT OR UPDATE OR DELETE ON project_expenses FOR EACH ROW EXECUTE FUNCTION notify_table_change();
+CREATE TRIGGER project_expenses_notify AFTER INSERT OR UPDATE OR DELETE ON project_expenses
+  FOR EACH ROW EXECUTE FUNCTION notify_table_change();
