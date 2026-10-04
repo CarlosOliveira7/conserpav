@@ -1,4 +1,4 @@
-import { UserPlus, Users } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ProjectSelect from "../components/ProjectSelect";
@@ -16,14 +16,14 @@ export default function EquipePage() {
 
   return (
     <div className="page">
-      <PageHeader icon={Users} eyebrow="Equipe" title="Funcionários" />
+      <PageHeader title="Funcionários" />
       <ProjectSelect />
       <button
         type="button"
-        className="primary-button employee-add-toggle"
+        className={formOpen ? "secondary-button" : "primary-button employee-add-toggle"}
         onClick={() => setFormOpen((current) => !current)}
       >
-        <UserPlus size={17} />
+        <UserPlus size={17} aria-hidden="true" />
         {formOpen ? "Fechar cadastro" : "Cadastrar funcionário"}
       </button>
       {formOpen && <EmployeeForm onCreated={handleEmployeeCreated} />}

@@ -1646,12 +1646,13 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #ff5b62;
-  color: #ffffff;
+  background: var(--control-bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -2190,13 +2191,12 @@ a:focus-visible {
   width: 40px;
   height: 40px;
   flex: 0 0 auto;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-  color: #ffffff;
+  border-radius: 50%;
+  background: var(--control-bg);
+  color: var(--ink);
   font-size: 0.75rem;
   font-weight: 700;
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 10px rgba(11, 59, 115, 0.18);
+  border: 1px solid var(--line);
 }
 
 .employee-cell-name {
