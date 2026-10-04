@@ -24,6 +24,7 @@ export const expenseSchema = z
       .number({ invalid_type_error: "Informe um valor unitário válido." })
       .positive({ message: "Valor unitário deve ser maior que zero." })
       .max(MAX_AMOUNT, { message: "Valor unitário excede o limite." }),
+    total: z.number().optional(),
     spent_at: dateStringSchema,
     notes: z.string().trim().max(500, { message: "Observações devem ter no máximo 500 caracteres." }).default(""),
     is_settled: z.boolean({ invalid_type_error: "Informe se o gasto está fechado." }),
