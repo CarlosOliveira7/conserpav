@@ -2567,37 +2567,30 @@ a:focus-visible {
 }
 
 .print-report-button:hover {
-  transform: translateY(-2px);
-  background: #ff5347;
-}
-
-.print-report-button:active {
-  transform: translateY(0);
+  background: var(--red-dark);
 }
 
 .total-consolidado-card {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border-radius: var(--radius-md);
-  background: var(--tint-success-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--field-radius, 6px);
+  background: var(--surface-alt);
   padding: 16px 20px;
   margin-bottom: 20px;
 }
 
 .total-consolidado-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--tint-success-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .total-consolidado-value {
-  font-family: "Fraunces", serif;
-  font-size: 1.9rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: var(--tint-success-text);
+  color: var(--ink);
 }
 
 .report-table-head {

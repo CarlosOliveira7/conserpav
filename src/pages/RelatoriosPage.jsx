@@ -92,7 +92,7 @@ export default function RelatoriosPage() {
 
   return (
     <div className="page">
-      <PageHeader icon={FileBarChart2} eyebrow="Relatórios" title="Relatórios e Fechamento" />
+      <PageHeader title="Relatórios e fechamento" />
       <ProjectSelect />
 
       {!activeProject ? (
@@ -112,7 +112,7 @@ export default function RelatoriosPage() {
             <div className="print-letterhead-meta">
               <span>{activeProject.name}</span>
               <span className="print-closing-badge">
-                FECHAMENTO {closingPeriod === "semanal" ? "SEMANAL" : "QUINZENAL"}
+                Fechamento {closingPeriod === "semanal" ? "semanal" : "quinzenal"}
               </span>
               <span>
                 Período de {formatDisplayDate(startDate)} a {formatDisplayDate(endDate)}
@@ -122,7 +122,6 @@ export default function RelatoriosPage() {
 
           <div className="report-head-row">
             <div>
-              <p className="eyebrow">Fechamento da chamada</p>
               <h2 className="form-title">Relatório de pagamento</h2>
               <div className="report-period-picker" aria-label="Período do relatório">
                 <DatePickerField
@@ -136,7 +135,6 @@ export default function RelatoriosPage() {
               </div>
             </div>
             <div className="report-head-actions">
-              <span className="count-badge">{activeProject.name}</span>
               <button
                 type="button"
                 className="print-report-button"
@@ -145,7 +143,7 @@ export default function RelatoriosPage() {
                 aria-disabled={!reportReady}
               >
                 <Printer size={16} />
-                {reportLoading ? "Atualizando..." : "Gerar Relatório"}
+                {reportLoading ? "Atualizando…" : "Gerar relatório"}
               </button>
             </div>
           </div>
