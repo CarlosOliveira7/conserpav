@@ -1,13 +1,15 @@
 import pg from "pg";
 import { config } from "./config.js";
+import { logger } from "./logger.js";
 
-// Tempo real: um único client dedicado faz LISTEN no canal "table_changes"
-// (alimentado pelos triggers do banco) e repassa cada mudança a todos os
-// navegadores conectados via Server-Sent Events.
 const clients = new Set();
 let listener = null;
+let reconnectTimer = null;
+let stopping = false;
 
 async function startListener() {
+  if (stopping) return;
+
   const client = new pg.Client({
     connectionString: config.databaseUrl,
     ssl: config.databaseSsl ? { rejectUnauthorized: false } : false,
@@ -19,31 +21,56 @@ async function startListener() {
 
   const retry = () => {
     listener = null;
-    setTimeout(() => startListener().catch(() => {}), 3000);
+    if (!stopping) {
+      reconnectTimer = setTimeout(() => startListener().catch(() => {}), 3000);
+    }
   };
+
   client.on("error", (err) => {
-    console.error("[events] conexão LISTEN caiu:", err.message);
+    logger.error({ errMessage: err.message }, "[events] conexão LISTEN caiu");
     retry();
   });
+
   client.on("end", retry);
 
   try {
     await client.connect();
     await client.query("LISTEN table_changes");
     listener = client;
-    console.log("[events] ouvindo canal table_changes");
+    logger.info("[events] ouvindo canal table_changes");
   } catch (err) {
-    console.error("[events] falha ao iniciar LISTEN:", err.message);
+    logger.error({ errMessage: err.message }, "[events] falha ao iniciar LISTEN");
     retry();
   }
 }
 
 export function initEvents() {
+  stopping = false;
   startListener();
-  // Heartbeat: evita que proxies derrubem conexões ociosas.
   setInterval(() => {
     for (const res of clients) res.write(": ping\n\n");
   }, 25000).unref();
+}
+
+export async function closeEvents() {
+  stopping = true;
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  for (const res of clients) {
+    try {
+      res.end();
+    } catch {
+      /* ignore */
+    }
+  }
+  clients.clear();
+  if (listener) {
+    try {
+      await listener.end();
+    } catch {
+      /* ignore */
+    }
+    listener = null;
+  }
 }
 
 export function eventsHandler(req, res) {

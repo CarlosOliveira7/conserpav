@@ -4,13 +4,13 @@ import bcrypt from "bcryptjs";
 import { pool } from "../src/db.js";
 
 const [email, password] = process.argv.slice(2);
-if (!email || !password || password.length < 6) {
-  console.error("Uso: npm run user:create -- <email> <senha com 6+ caracteres>");
+if (!email || !password || password.length < 8) {
+  console.error("Uso: npm run user:create -- <email> <senha com 8+ caracteres>");
   process.exit(1);
 }
 
 try {
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, 12);
   const { rows } = await pool.query(
     `insert into users (email, password_hash) values ($1, $2)
      on conflict (lower(email)) do update set password_hash = excluded.password_hash, updated_at = now()
