@@ -988,31 +988,27 @@ button:active:not(:disabled) {
 }
 
 .register-button {
-  background: #08783a;
-  box-shadow: 0 5px 14px rgba(8, 120, 58, 0.24);
+  background: var(--red);
 }
 
 .register-button:hover:not(:disabled) {
-  background: #05632f;
-  box-shadow: 0 7px 18px rgba(8, 120, 58, 0.32);
+  background: var(--red-dark);
 }
 
 .register-button:active:not(:disabled) {
-  background: #045326;
+  background: var(--red-dark);
 }
 
 .employee-add-toggle {
-  min-height: 52px;
+  min-height: 44px;
   margin-top: 12px;
   margin-bottom: 18px;
-  background: #08783a;
-  box-shadow: 0 5px 14px rgba(8, 120, 58, 0.28);
-  font-size: 0.96rem;
+  background: var(--red);
+  font-size: 0.88rem;
 }
 
 .employee-add-toggle:hover:not(:disabled) {
-  background: #05632f;
-  box-shadow: 0 7px 18px rgba(8, 120, 58, 0.34);
+  background: var(--red-dark);
 }
 
 .primary-button:hover:not(:disabled) {
@@ -1110,11 +1106,11 @@ button:active:not(:disabled) {
 
 .expense-add-button {
   margin-top: 0;
-  background: var(--green);
+  background: var(--red);
 }
 
 .expense-add-button:hover:not(:disabled) {
-  background: #05632f;
+  background: var(--red-dark);
 }
 
 .expense-list-panel {
@@ -2954,11 +2950,11 @@ a:focus-visible {
 }
 
 .modal-actions .register-button {
-  background: #08783a;
+  background: var(--red);
 }
 
 .modal-actions .register-button:hover:not(:disabled) {
-  background: #05632f;
+  background: var(--red-dark);
 }
 
 @media (max-width: 600px) {
