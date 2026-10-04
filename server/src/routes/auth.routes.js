@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { requireAuth } from "../auth.js";
+import { clearAuthCookie, requireAuth, setAuthCookie } from "../auth.js";
+import { authLimiter } from "../middleware/rateLimit.js";
 import { validate } from "../middleware/validate.js";
 import {
   forgotPasswordSchema,
@@ -18,20 +19,26 @@ import {
 
 const router = Router();
 
-router.post("/auth/login", validate({ body: loginSchema }), async (req, res, next) => {
+router.post("/auth/login", authLimiter, validate({ body: loginSchema }), async (req, res, next) => {
   try {
     const result = await loginUser(req.body.email, req.body.password);
-    res.json(result);
+    setAuthCookie(res, result.token);
+    res.json({ user: result.user, token: result.token });
   } catch (err) {
     next(err);
   }
+});
+
+router.post("/auth/logout", (req, res) => {
+  clearAuthCookie(res);
+  res.json({ ok: true });
 });
 
 router.get("/auth/me", requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
-router.post("/auth/forgot", validate({ body: forgotPasswordSchema }), async (req, res, next) => {
+router.post("/auth/forgot", authLimiter, validate({ body: forgotPasswordSchema }), async (req, res, next) => {
   try {
     const result = await requestPasswordReset(req.body.email);
     res.json(result);
@@ -40,7 +47,7 @@ router.post("/auth/forgot", validate({ body: forgotPasswordSchema }), async (req
   }
 });
 
-router.post("/auth/reset", validate({ body: resetPasswordSchema }), async (req, res, next) => {
+router.post("/auth/reset", authLimiter, validate({ body: resetPasswordSchema }), async (req, res, next) => {
   try {
     const result = await resetPasswordWithToken(req.body.token, req.body.password);
     res.json(result);
@@ -52,6 +59,7 @@ router.post("/auth/reset", validate({ body: resetPasswordSchema }), async (req, 
 router.put(
   "/auth/password",
   requireAuth,
+  authLimiter,
   validate({ body: updatePasswordSchema }),
   async (req, res, next) => {
     try {
@@ -66,11 +74,13 @@ router.put(
 router.put(
   "/auth/email",
   requireAuth,
+  authLimiter,
   validate({ body: updateEmailSchema }),
   async (req, res, next) => {
     try {
       const result = await updateEmail(req.user.id, req.body.newEmail, req.body.currentPassword);
-      res.json(result);
+      setAuthCookie(res, result.token);
+      res.json({ user: result.user, token: result.token });
     } catch (err) {
       next(err);
     }
