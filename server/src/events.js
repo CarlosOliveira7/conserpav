@@ -16,7 +16,20 @@ async function startListener() {
   });
 
   client.on("notification", (msg) => {
-    for (const res of clients) res.write(`data: ${msg.payload}\n\n`);
+    try {
+      const payload = JSON.parse(msg.payload);
+      const ownerId = payload.owner_id;
+
+      for (const res of clients) {
+        // Envia o evento apenas se o cliente pertencer ao mesmo proprietário (multi-tenant isolation)
+        if (!ownerId || res.userId === ownerId) {
+          res.write(`data: ${msg.payload}\n\n`);
+        }
+      }
+    } catch {
+      // Se não for JSON válido, faz broadcast genérico seguro
+      for (const res of clients) res.write(`data: ${msg.payload}\n\n`);
+    }
   });
 
   const retry = () => {
@@ -82,6 +95,10 @@ export function eventsHandler(req, res) {
   });
   res.flushHeaders();
   res.write("retry: 3000\n\n");
+
+  // Vincula a conexão SSE ao ID do usuário autenticado
+  res.userId = req.user.id;
   clients.add(res);
+
   req.on("close", () => clients.delete(res));
 }
