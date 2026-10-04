@@ -1,4 +1,4 @@
-import { UserPlus } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ProjectSelect from "../components/ProjectSelect";
@@ -16,7 +16,7 @@ export default function EquipePage() {
 
   return (
     <div className="page">
-      <PageHeader title="Funcionários" />
+      <PageHeader icon={Users} title="Funcionários" />
       <ProjectSelect />
       <button
         type="button"

@@ -484,11 +484,22 @@ button:active:not(:disabled) {
 
 .page-header-title {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: "Fraunces", serif;
   font-size: 1.6rem;
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
+}
+
+.page-header-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+  flex-shrink: 0;
 }
 
 /* ---------- Seletor de obra ativa (ProjectSelect.jsx) ---------- */
@@ -1895,7 +1906,7 @@ a:focus-visible {
   max-width: 360px;
 }
 
-.attendance-date-picker {
+.attendance-report-dates .attendance-date-picker {
   flex: 1 1 0;
   width: 0;
   min-width: 0;

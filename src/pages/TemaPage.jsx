@@ -1,4 +1,4 @@
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Palette } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import { useTheme } from "../context/ThemeContext";
 
@@ -7,7 +7,7 @@ export default function TemaPage() {
 
   return (
     <div className="page">
-      <PageHeader title="Tema" />
+      <PageHeader icon={Palette} title="Tema" />
 
       <div className="theme-option-list">
         <button

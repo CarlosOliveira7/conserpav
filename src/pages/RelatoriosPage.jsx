@@ -92,7 +92,7 @@ export default function RelatoriosPage() {
 
   return (
     <div className="page">
-      <PageHeader title="Relatórios e fechamento" />
+      <PageHeader icon={FileBarChart2} title="Relatórios e fechamento" />
       <ProjectSelect />
 
       {!activeProject ? (

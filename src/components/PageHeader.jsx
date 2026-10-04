@@ -3,15 +3,17 @@ export default function PageHeader({ icon: Icon, eyebrow, title, children }) {
     <div className="page-header">
       {eyebrow && (
         <div className="page-header-row">
-          {Icon && (
-            <span className="page-header-icon" aria-hidden="true">
-              <Icon size={16} />
-            </span>
-          )}
           <span className="page-header-eyebrow">{eyebrow}</span>
         </div>
       )}
-      <h1 className="page-header-title">{title}</h1>
+      <h1 className="page-header-title">
+        {Icon && (
+          <span className="page-header-title-icon" aria-hidden="true">
+            <Icon size={24} />
+          </span>
+        )}
+        <span>{title}</span>
+      </h1>
       {children}
     </div>
   );

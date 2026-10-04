@@ -88,7 +88,7 @@ export default function ChamadaPage() {
 
   return (
     <div className="page">
-      <PageHeader title={`Chamada da ${periodLabel}`} />
+      <PageHeader icon={CalendarCheck} title={`Chamada da ${periodLabel}`} />
       <ProjectSelect />
 
       {!activeProject ? (

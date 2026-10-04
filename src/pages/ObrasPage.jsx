@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { HardHat, Plus } from "lucide-react";
 import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ProjectForm from "../components/ProjectForm";
@@ -9,7 +9,7 @@ export default function ObrasPage() {
 
   return (
     <div className="page">
-      <PageHeader title="Obras" />
+      <PageHeader icon={HardHat} title="Obras" />
       <div className="project-register-toolbar">
         <button
           type="button"
