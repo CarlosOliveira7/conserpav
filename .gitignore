@@ -6,6 +6,7 @@ dist
 *.log
 
 .vercel
+.vite
 .env*
 
 server/node_modules
