@@ -12,6 +12,9 @@
   --radius-lg: 1.5rem;
   --radius-md: 1rem;
   --radius-sm: 0.7rem;
+  --field-height: 44px;
+  --field-radius: 6px;
+  --field-font-size: 16px;
   --shadow-panel: 0 18px 46px rgba(0, 0, 0, 0.07);
   --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.04);
 
@@ -748,29 +751,55 @@ button:active:not(:disabled) {
   line-height: 1.5;
 }
 
+.form-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .field-label {
   display: block;
-  margin: 16px 0 8px;
-  font-size: 0.9rem;
+  margin: 12px 0 6px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--ink);
 }
 
+.form-field > .field-label:first-child {
+  margin-top: 0;
+}
+
+.field-required {
+  color: var(--red);
+}
+
 .field-hint {
-  margin: 8px 0 0;
-  font-size: 0.75rem;
+  margin: 4px 0 0;
+  font-size: 0.78rem;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.4;
+}
+
+.field-error {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--red);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .field {
   width: 100%;
+  box-sizing: border-box;
+  min-height: var(--field-height, 44px);
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--field-radius, 6px);
   background: var(--surface);
-  padding: 0.72rem 0.85rem;
+  padding: 0.55rem 0.85rem;
   color: var(--ink);
-  font: inherit;
+  font-family: inherit;
+  font-size: var(--field-font-size, 16px);
+  line-height: 1.4;
 }
 
 .field-textarea {
@@ -779,8 +808,84 @@ button:active:not(:disabled) {
 }
 
 .field:focus-visible {
-  outline: 3px solid rgba(215, 25, 32, 0.18);
+  outline: 2px solid var(--red);
+  outline-offset: 1px;
   border-color: var(--red);
+}
+
+.field.is-invalid {
+  border-color: var(--red);
+}
+
+/* ---------- Select Nativo Padronizado ---------- */
+.select-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.select-control {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 38px;
+  cursor: pointer;
+  background-color: var(--surface);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--muted);
+}
+
+/* ---------- Segmented Control (Substituto Plano de Radios/Selects Binarios) ---------- */
+.segmented-control {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--field-radius, 6px);
+  padding: 3px;
+  min-height: var(--field-height, 44px);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.segmented-option {
+  flex: 1;
+  min-height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: calc(var(--field-radius, 6px) - 2px);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segmented-option:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.segmented-option.is-selected {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.segmented-option:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 1px;
 }
 
 /* ---------- Autenticação (login / recuperação de senha) ---------- */
