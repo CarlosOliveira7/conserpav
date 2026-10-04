@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import Field from "../components/Field";
+import Input from "../components/Input";
 import "./LoginPage.css";
 
 export default function LoginPage() {
@@ -58,13 +60,12 @@ export default function LoginPage() {
 
         <div className="login-card">
           <div className="login-title">
-            <h2>Fazer Login</h2>
+            <h2>Fazer login</h2>
           </div>
 
           <form className="login-form" onSubmit={handleLogin}>
-            <div className="form-group">
-              <label htmlFor="email">E-mail</label>
-              <input
+            <Field label="E-mail" htmlFor="email" required>
+              <Input
                 id="email"
                 type="email"
                 placeholder="seu@email.com"
@@ -74,11 +75,10 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
               />
-            </div>
+            </Field>
 
-            <div className="form-group">
-              <label htmlFor="password">Senha</label>
-              <input
+            <Field label="Senha" htmlFor="password" required>
+              <Input
                 id="password"
                 type="password"
                 placeholder="••••••"
@@ -88,10 +88,10 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
               />
-            </div>
+            </Field>
 
             <button type="submit" className="login-button" disabled={isFormDisabled}>
-              {isLoading ? "Entrando..." : "Entrar"}
+              {isLoading ? "Entrando…" : "Entrar"}
             </button>
 
             <div className="login-footer">
