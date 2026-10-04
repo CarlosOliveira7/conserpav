@@ -88,7 +88,7 @@ export default function ChamadaPage() {
 
   return (
     <div className="page">
-      <PageHeader icon={CalendarCheck} eyebrow="Frequência diária" title={`Chamada da ${periodLabel}`} />
+      <PageHeader title={`Chamada da ${periodLabel}`} />
       <ProjectSelect />
 
       {!activeProject ? (
@@ -185,13 +185,13 @@ export default function ChamadaPage() {
                 {firstFilledDay.start?.weekIndex === weekIndex && firstFilledDay.start?.day === dayKey && (
                   <span className="day-tab-start-badge day-tab-start" aria-label="Início da quinzena">
                     <CalendarCheck size={11} aria-hidden="true" />
-                    INÍCIO
+                    Início
                   </span>
                 )}
                 {weekIndex === reportWeekStarts.length - 1 && dayKey === "sab" && (
                     <span className="day-tab-start-badge day-tab-end" aria-label={`Fim da ${periodLabel.toLowerCase()}`}>
                     <CalendarCheck size={11} aria-hidden="true" />
-                    FIM
+                    Fim
                   </span>
                 )}
               </button>
