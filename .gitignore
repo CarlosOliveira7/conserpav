@@ -13,3 +13,4 @@ server/.env
 
 # mantém os modelos de configuração versionados
 !.env.example
+!server/.env.example
