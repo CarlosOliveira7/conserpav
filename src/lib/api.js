@@ -114,6 +114,15 @@ export function isValidDay(day) {
   return DAY_KEYS.includes(day);
 }
 
+// ---------- Relatório de Pagamento (Calculado no Servidor) ----------
+
+export function fetchReport({ projectId, weeks, startDate, endDate }) {
+  let url = `/reports?project_id=${encodeURIComponent(projectId)}&weeks=${encodeURIComponent(weeks.join(","))}`;
+  if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
+  if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
+  return run(request("GET", url));
+}
+
 // ---------- Autenticação ----------
 
 export function signInWithPassword(email, password) {

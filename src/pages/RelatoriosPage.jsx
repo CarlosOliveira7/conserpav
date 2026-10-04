@@ -6,9 +6,7 @@ import PageHeader from "../components/PageHeader";
 import ProjectSelect from "../components/ProjectSelect";
 import * as api from "../lib/api";
 import {
-  getAttendanceSlot,
   getWeekStartsBetween,
-  getWorkingDatesBetween,
   isMonday,
   addWorkingDays,
   getPeriodEnd,
@@ -29,6 +27,7 @@ export default function RelatoriosPage() {
   const [startDate, setStartDate] = useState(reportStartDate);
   const [endDate, setEndDate] = useState(reportEndDate);
   const [rows, setRows] = useState([]);
+  const [totalConsolidado, setTotalConsolidado] = useState(0);
   const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
@@ -37,25 +36,31 @@ export default function RelatoriosPage() {
   }, [reportStartDate, reportEndDate]);
 
   useEffect(() => {
-    // O relatório só consulta as semanas do período atualmente selecionado.
     if (!activeProject || !activeEmployees.length || !startDate || !endDate || startDate > endDate) {
       setRows([]);
+      setTotalConsolidado(0);
       setReportLoading(false);
       return undefined;
     }
 
     let cancelled = false;
     setReportLoading(true);
-    const workingDates = getWorkingDatesBetween(startDate, endDate);
     const weekStarts = getWeekStartsBetween(startDate, endDate);
 
-    api.fetchAttendanceForWeeks(weekStarts).then(({ data, error }) => {
+    api.fetchReport({
+      projectId: activeProject.id,
+      weeks: weekStarts,
+      startDate,
+      endDate,
+    }).then(({ data, error }) => {
       if (cancelled) return;
       if (error) {
-        showError("Não foi possível carregar as diárias deste intervalo.");
+        showError("Não foi possível carregar o relatório deste período.");
         setRows([]);
-      } else {
-        setRows(buildReportRows(activeEmployees, workingDates, data || []));
+        setTotalConsolidado(0);
+      } else if (data) {
+        setRows(data.rows || []);
+        setTotalConsolidado(data.total_consolidado || 0);
       }
       setReportLoading(false);
     });
@@ -81,8 +86,7 @@ export default function RelatoriosPage() {
     }
   };
 
-  const totalConsolidado = rows.reduce((sum, row) => sum + row.total, 0);
-  const reportReady = !reportLoading && rows.length === activeEmployees.length;
+  const reportReady = !reportLoading && activeEmployees.length > 0 && rows.length === activeEmployees.length;
 
   return (
     <div className="page">
@@ -183,27 +187,6 @@ export default function RelatoriosPage() {
   );
 }
 
-function buildReportRows(employees, workingDates, records) {
-  const attendanceBySlot = new Map(
-    records.map((record) => [
-      `${record.employee_id}::${record.week_start}::${record.day}`,
-      record.status,
-    ])
-  );
-
-  return employees.map((employee) => {
-    const statuses = workingDates.map((date) => {
-      const { weekStart, day } = getAttendanceSlot(date);
-      return attendanceBySlot.get(`${employee.id}::${weekStart}::${day}`) || "absent";
-    });
-    const full = statuses.filter((status) => status === "full").length;
-    const half = statuses.filter((status) => status === "half").length;
-    const absent = statuses.length - full - half;
-    const total = full * employee.daily_rate + half * (employee.daily_rate / 2);
-    return { employee, full, half, absent, total };
-  });
-}
-
 function DatePickerField({ label, value, onChange, mondayOnly = false, readOnly = false }) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => getMonthDate(value));
@@ -240,6 +223,7 @@ function DatePickerField({ label, value, onChange, mondayOnly = false, readOnly 
         type="button"
         className={`report-date-field${readOnly ? " is-read-only" : ""}`}
         onClick={() => !readOnly && setOpen((current) => !current)}
+        disabled={readOnly}
         aria-disabled={readOnly}
       >
         <span className="report-date-label">{label}</span>
