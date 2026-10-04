@@ -152,8 +152,6 @@ export function normalizeClosingPeriod(closingPeriod) {
 /**
  * Retorna a lista de segundas-feiras (uma por semana) que compõem o período
  * de fechamento a partir de "periodStart".
- * - semanal  -> [segunda]
- * - quinzenal -> [segunda da semana 1, segunda da semana 2]
  */
 export function getPeriodWeekStarts(periodStart, closingPeriod = DEFAULT_CLOSING_PERIOD) {
   const { weeks } = CLOSING_PERIODS[normalizeClosingPeriod(closingPeriod)];
@@ -167,7 +165,7 @@ export function getPeriodEnd(periodStart, closingPeriod = DEFAULT_CLOSING_PERIOD
   return getWeekEnd(lastWeekStart);
 }
 
-/** Avança/retrocede "amount" períodos inteiros (1 ou 2 semanas de cada vez). */
+/** Avança/retrocede "amount" períodos inteiros. */
 export function addPeriods(periodStart, amount, closingPeriod = DEFAULT_CLOSING_PERIOD) {
   const { weeks } = CLOSING_PERIODS[normalizeClosingPeriod(closingPeriod)];
   return addWeeks(periodStart, amount * weeks);
@@ -182,21 +180,57 @@ export function formatPeriodRange(periodStart, closingPeriod = DEFAULT_CLOSING_P
   return `${format(periodStart)} a ${format(getPeriodEnd(periodStart, closingPeriod))}`;
 }
 
-/** true se a data de hoje cai dentro do período de fechamento informado. */
 export function isCurrentPeriod(periodStart, closingPeriod = DEFAULT_CLOSING_PERIOD) {
   const todayISO = toISODate(new Date());
   const periodEnd = getPeriodEnd(periodStart, closingPeriod);
-  // Comparação de strings funciona pois as datas estão no formato ISO
-  // (YYYY-MM-DD), que ordena igual à ordem cronológica.
   return todayISO >= periodStart && todayISO <= periodEnd;
 }
 
-/**
- * Retorna a chave do dia de hoje (DAY_KEYS) — "seg", "ter" etc. Usado para
- * já abrir a Chamada na aba do dia certo quando o usuário entra na tela.
- * Se hoje for domingo (obra não trabalha), cai em "seg" como padrão.
- */
 export function getTodayDayKey() {
   const weekdayToKey = { 1: "seg", 2: "ter", 3: "qua", 4: "qui", 5: "sex", 6: "sab" };
   return weekdayToKey[new Date().getDay()] || "seg";
+}
+
+export function formatDisplayDate(isoDate) {
+  if (!isoDate) return "Selecione uma data";
+  const [year, month, day] = isoDate.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+export function getMonthDate(isoDate) {
+  if (!isoDate) return new Date();
+  const [year, month] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+export function shiftMonth(date, amount) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+export function formatMonth(date) {
+  return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+
+export function isOutsideMonth(isoDate, monthDate) {
+  const monthPrefix = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
+  return !isoDate.startsWith(`${monthPrefix}-`);
+}
+
+export function getCalendarDays(month) {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const days = [];
+  const previousMonth = new Date(month.getFullYear(), month.getMonth(), 0);
+  for (let index = firstDay; index > 0; index -= 1) {
+    const day = previousMonth.getDate() - index + 1;
+    days.push(
+      `${previousMonth.getFullYear()}-${String(previousMonth.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    );
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    days.push(
+      `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    );
+  }
+  return days;
 }
