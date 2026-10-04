@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import Field from "../components/Field";
+import Input from "../components/Input";
 import "./ForgotPasswordPage.css";
 
 export default function ForgotPasswordPage() {
@@ -72,7 +74,7 @@ export default function ForgotPasswordPage() {
     <div className="forgot-password-page">
       <div className="forgot-container">
         <div className="forgot-header">
-          <h1>{isResetMode ? "Redefinir senha" : "Recuperar Senha"}</h1>
+          <h1>{isResetMode ? "Redefinir senha" : "Recuperar senha"}</h1>
           <p>Conserpav Frequência</p>
         </div>
 
@@ -83,9 +85,8 @@ export default function ForgotPasswordPage() {
                 Digite seu e-mail para receber um link de recuperação de senha.
               </p>
               <form className="forgot-form" onSubmit={handleRequestReset}>
-                <div className="form-group">
-                  <label htmlFor="recovery-email">E-mail</label>
-                  <input
+                <Field label="E-mail" htmlFor="recovery-email" required>
+                  <Input
                     id="recovery-email"
                     type="email"
                     placeholder="seu@email.com"
@@ -95,9 +96,9 @@ export default function ForgotPasswordPage() {
                     autoComplete="email"
                     required
                   />
-                </div>
+                </Field>
                 <button type="submit" className="forgot-button" disabled={isFormDisabled}>
-                  {isLoading ? "Enviando..." : "Enviar link de recuperação"}
+                  {isLoading ? "Enviando…" : "Enviar link de recuperação"}
                 </button>
               </form>
             </>
@@ -107,9 +108,8 @@ export default function ForgotPasswordPage() {
                 Digite sua nova senha para recuperar acesso à sua conta.
               </p>
               <form className="forgot-form" onSubmit={handleResetPassword}>
-                <div className="form-group">
-                  <label htmlFor="new-password">Nova senha</label>
-                  <input
+                <Field label="Nova senha" htmlFor="new-password" required>
+                  <Input
                     id="new-password"
                     type="password"
                     placeholder="••••••"
@@ -119,10 +119,9 @@ export default function ForgotPasswordPage() {
                     autoComplete="new-password"
                     required
                   />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="confirm-password">Confirmar senha</label>
-                  <input
+                </Field>
+                <Field label="Confirmar senha" htmlFor="confirm-password" required>
+                  <Input
                     id="confirm-password"
                     type="password"
                     placeholder="••••••"
@@ -132,16 +131,16 @@ export default function ForgotPasswordPage() {
                     autoComplete="new-password"
                     required
                   />
-                </div>
+                </Field>
                 <button type="submit" className="forgot-button" disabled={isFormDisabled}>
-                  {isLoading ? "Atualizando..." : "Atualizar senha"}
+                  {isLoading ? "Atualizando…" : "Atualizar senha"}
                 </button>
               </form>
             </>
           )}
 
           <div className="forgot-back">
-            <a href="/" className="back-link">← Voltar para Login</a>
+            <a href="/" className="back-link">← Voltar para login</a>
           </div>
         </div>
       </div>
