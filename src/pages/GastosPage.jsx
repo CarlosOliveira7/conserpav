@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Wallet, Plus, Trash2, PencilLine, Printer, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, PencilLine, Printer, CheckCircle2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import PageHeader from "../components/PageHeader";
 import ProjectSelect from "../components/ProjectSelect";
@@ -115,7 +115,7 @@ export default function GastosPage() {
 
   return (
     <div className="page">
-      <PageHeader icon={Wallet} eyebrow="Custos" title="Gastos por obra" />
+      <PageHeader title="Gastos por obra" />
       <ProjectSelect />
 
       {!activeProject ? (

@@ -398,8 +398,14 @@ button:active:not(:disabled) {
 
 @media (min-width: 900px) {
   .page {
-    max-width: 760px;
+    max-width: 960px;
     padding: 32px 24px 40px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page {
+    max-width: 1200px;
   }
 }
 
@@ -1113,6 +1119,19 @@ button:active:not(:disabled) {
 
 .expense-list-panel {
   padding: 0 16px 16px;
+  overflow-x: auto;
+}
+
+/* Match expense-row's 7-column grid so headers align exactly */
+.expense-list-panel .report-table-head {
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(0, 1fr)
+    minmax(0, 0.55fr)
+    minmax(0, 0.85fr)
+    minmax(0, 0.85fr)
+    minmax(0, 0.75fr)
+    auto;
 }
 
 .expense-list {
@@ -1123,14 +1142,21 @@ button:active:not(:disabled) {
 
 .expense-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.6fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 0.7fr) minmax(0, 0.5fr);
-  gap: 12px;
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(0, 1fr)
+    minmax(0, 0.55fr)
+    minmax(0, 0.85fr)
+    minmax(0, 0.85fr)
+    minmax(0, 0.75fr)
+    auto;
+  gap: 8px 12px;
   align-items: center;
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface-alt);
-  padding: 12px 10px;
+  padding: 10px 12px;
 }
 
 .expense-row strong,
@@ -1150,11 +1176,16 @@ button:active:not(:disabled) {
   color: var(--green);
 }
 
+/* Prevent date from wrapping in the table */
+.expense-row > span:nth-child(6) {
+  white-space: nowrap;
+}
+
 .expense-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -1162,10 +1193,9 @@ button:active:not(:disabled) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  min-height: 34px;
-  min-width: 0;
-  flex: 1 1 0;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 8px;
   white-space: nowrap;
 }
 
@@ -1175,8 +1205,9 @@ button:active:not(:disabled) {
   color: var(--tint-danger-text);
 }
 
+/* Notes row spans full width — hidden on desktop table view */
 .expense-notes {
-  grid-column: 1 / -1;
+  display: none;
 }
 
 .settle-action {
@@ -1238,16 +1269,26 @@ button:active:not(:disabled) {
   .expense-row > *::before {
     display: block;
     width: fit-content;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     content: attr(data-label);
     border: 0;
     padding-left: 0;
-    color: var(--red-dark);
-    font-size: 0.66rem;
-    font-weight: 900;
-    letter-spacing: 0.09em;
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     line-height: 1.25;
-    text-transform: uppercase;
+  }
+
+  /* Restore notes and date nowrap override on mobile */
+  .expense-notes {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+
+  .expense-row > span:nth-child(6) {
+    white-space: normal;
   }
 
   .expense-row strong {
@@ -1279,19 +1320,11 @@ button:active:not(:disabled) {
   .expense-row > span:nth-child(5) {
     grid-column: 1 / -1;
     grid-row: 4;
-  }
-
-  .expense-row > span:nth-child(7) {
-    grid-column: 1 / -1;
-    grid-row: 5;
-  }
-
-  .expense-row > span:nth-child(5)::before {
+    font-weight: 800;
     color: var(--green);
   }
 
-  .expense-row > span:nth-child(5) {
-    font-weight: 800;
+  .expense-row > span:nth-child(5)::before {
     color: var(--green);
   }
 
@@ -1311,7 +1344,7 @@ button:active:not(:disabled) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.4rem 0.35rem;
+    padding: 0.4rem 0.6rem;
     white-space: nowrap;
   }
 }
