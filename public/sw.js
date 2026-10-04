@@ -1,10 +1,6 @@
-// Service worker simples: cacheia os arquivos estáticos do próprio app
-// (HTML, JS, CSS, ícones) para abrir mais rápido quando instalado na tela
-// inicial. NUNCA cacheia chamadas à API (dados sempre vêm da rede,
-// para não mostrar frequência desatualizada).
-const CACHE_NAME = "obra-frequencia-shell-v1";
+const CACHE_NAME = "conserpav-shell-v2";
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
@@ -21,9 +17,17 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Só cacheia requisições GET do próprio domínio (app shell). Chamadas para
-  // a API (outro domínio) e requisições que não sejam GET passam direto.
-  if (request.method !== "GET" || url.origin !== self.location.origin) {
+  // NUNCA cachear requisições para a API ou métodos que não sejam GET
+  if (
+    request.method !== "GET" ||
+    url.pathname.startsWith("/api") ||
+    url.pathname.includes("/api/")
+  ) {
+    return;
+  }
+
+  // Cachear apenas estáticos do próprio domínio do app shell
+  if (url.origin !== self.location.origin) {
     return;
   }
 
@@ -32,14 +36,12 @@ self.addEventListener("fetch", (event) => {
       const cached = await cache.match(request);
       const network = fetch(request)
         .then((response) => {
-          if (response && response.status === 200) {
+          if (response && response.status === 200 && response.type === "basic") {
             cache.put(request, response.clone());
           }
           return response;
         })
         .catch(() => cached);
-      // stale-while-revalidate: responde rápido com o cache (se existir) e
-      // atualiza em segundo plano.
       return cached || network;
     })
   );
