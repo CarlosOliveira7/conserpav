@@ -78,7 +78,7 @@ export default function EmployeeList({ highlightedEmployeeId }) {
         ))}
       </ul>
 
-      {editingProject && (
+      {editingEmployee && (
         <EditEmployeeModal employee={editingEmployee} onClose={() => setEditingEmployee(null)} />
       )}
     </div>

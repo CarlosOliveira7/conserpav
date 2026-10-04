@@ -1468,6 +1468,18 @@ a:focus-visible {
 
 .project-row-main {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.project-row-icon {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.project-row-text {
+  display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
@@ -1865,7 +1877,7 @@ a:focus-visible {
   box-sizing: border-box;
   min-height: 44px;
   padding: 5px 9px;
-  border-color: var(--red);
+  border-color: var(--line);
 }
 
 .attendance-date-picker .report-date-field strong {
@@ -1873,23 +1885,23 @@ a:focus-visible {
 }
 
 .attendance-date-picker.date-tone-start .report-date-field {
-  border-color: #18a957;
+  border-color: var(--green);
 }
 
 .attendance-date-picker.date-tone-start .report-date-label {
-  color: #18a957;
+  color: var(--green);
 }
 
 .attendance-date-picker.date-tone-start .report-date-icon {
-  color: #d71920;
+  color: var(--green);
 }
 
 .attendance-date-picker.date-tone-end .report-date-field {
-  border-color: #e02b35;
+  border-color: var(--red);
 }
 
 .attendance-date-picker.date-tone-end .report-date-label {
-  color: #e02b35;
+  color: var(--red);
 }
 
 .attendance-date-picker.date-tone-end .report-date-icon {
@@ -1932,11 +1944,11 @@ a:focus-visible {
 }
 
 .attendance-date-field.date-tone-start {
-  border-color: #18a957;
+  border-color: var(--green);
 }
 
 .attendance-date-field.date-tone-start > span {
-  color: #18a957;
+  color: var(--green);
 }
 
 .attendance-date-field.date-tone-start input {
@@ -1944,11 +1956,11 @@ a:focus-visible {
 }
 
 .attendance-date-field.date-tone-end {
-  border-color: #e02b35;
+  border-color: var(--red);
 }
 
 .attendance-date-field.date-tone-end > span {
-  color: #e02b35;
+  color: var(--red);
 }
 
 .attendance-calendar-button {
@@ -2345,8 +2357,8 @@ a:focus-visible {
   gap: 3px;
   min-width: 0;
   min-height: 68px;
-  border: 1px solid var(--red);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--field-radius, 6px);
   background: var(--surface);
   padding: 10px 12px 9px;
   color: var(--ink);
@@ -2385,12 +2397,12 @@ a:focus-visible {
 
 .report-date-icon {
   flex: 0 0 auto;
-  color: var(--red);
+  color: var(--muted);
   pointer-events: none;
 }
 
 .report-date-field:focus-visible {
-  outline: 3px solid rgba(215, 25, 32, 0.3);
+  outline: 3px solid rgba(0, 0, 0, 0.15);
   outline-offset: 2px;
 }
 

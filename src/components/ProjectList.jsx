@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil } from "lucide-react";
+import { Building2, Pencil } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import ConfirmButton from "./ConfirmButton";
 import EditProjectModal from "./EditProjectModal";
@@ -44,13 +44,16 @@ export default function ProjectList() {
     return (
       <li key={project.id} className={`project-flat-row${isActive ? " is-active" : ""}`}>
         <div className="project-row-main">
-          <div className="project-row-name-group">
-            <strong className="project-row-name">{project.name}</strong>
-            {isActive && <span className="project-badge-active">Ativa</span>}
+          <Building2 size={16} className="project-row-icon" aria-hidden="true" />
+          <div className="project-row-text">
+            <div className="project-row-name-group">
+              <strong className="project-row-name">{project.name}</strong>
+              {isActive && <span className="project-badge-active">Ativa</span>}
+            </div>
+            <span className="project-row-meta">
+              Fechamento {periodLabel?.toLowerCase()}
+            </span>
           </div>
-          <span className="project-row-meta">
-            Fechamento {periodLabel?.toLowerCase()}
-          </span>
         </div>
 
         <div className="project-row-actions">
