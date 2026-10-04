@@ -41,18 +41,12 @@ function getSavedPeriodStart() {
   return getWeekStart();
 }
 
-// A chave da frequência agora inclui também a semana ("weekStart").
-// Antes só existia "employeeId::day", o que funcionava enquanto só uma
-// semana ficava em tela por vez. Como o período quinzenal mostra 2 semanas
-// ao mesmo tempo, duas colunas diferentes podem ser "seg" (segunda da semana
-// 1 e segunda da semana 2) — sem o weekStart na chave elas se sobrescreveriam.
 function attendanceKey(employeeId, weekStart, day) {
   return `${employeeId}::${weekStart}::${day}`;
 }
 
 export function AppProvider({ children }) {
   const { showSuccess, showError } = useToast();
-  // ALTERAÇÃO: os dados só são carregados depois do login (a API exige token).
   const { isAuthenticated } = useAuth();
 
   const [projects, setProjects] = useState([]);
@@ -62,10 +56,6 @@ export function AppProvider({ children }) {
   const [loadError, setLoadError] = useState(null);
 
   const [activeProjectId, setActiveProjectId] = useState(null);
-  // ALTERAÇÃO: "weekStart" virou "periodStart". Continua sendo a segunda-feira
-  // que marca o INÍCIO do período em tela, mas agora o período pode abranger
-  // 1 semana (semanal) ou 2 semanas (quinzenal) — ver "closingPeriod" e
-  // "periodWeekStarts" logo abaixo, derivados a partir deste valor.
   const [homePeriodStart, setHomePeriodStart] = useState(getSavedPeriodStart);
   const [periodStart, setPeriodStart] = useState(homePeriodStart);
   const [reportStartDate, setReportStartDate] = useState(homePeriodStart);
@@ -73,7 +63,6 @@ export function AppProvider({ children }) {
   const [attendance, setAttendance] = useState(new Map());
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [pendingCells, setPendingCells] = useState(new Set());
-  // incrementa quando o tempo real reconecta, forçando recarregar a frequência
   const [reloadTick, setReloadTick] = useState(0);
 
   const [savingProject, setSavingProject] = useState(false);
@@ -83,23 +72,13 @@ export function AppProvider({ children }) {
 
   const hasHydratedActiveProject = useRef(false);
 
-  // ALTERAÇÃO: bloco novo. "activeProject" precisou subir para cá (antes só
-  // existia lá embaixo, na seção "Derivados") porque os efeitos de tempo real
-  // e de carregamento de frequência, logo abaixo, agora precisam saber o
-  // período de fechamento da obra ativa (closingPeriod) para descobrir quais
-  // semanas (periodWeekStarts) buscar no banco.
   const activeProject = useMemo(
     () => projects.find((project) => project.id === activeProjectId) || null,
     [projects, activeProjectId]
   );
 
-  // ALTERAÇÃO: período de fechamento da obra ativa ("semanal" ou "quinzenal").
-  // normalizeClosingPeriod garante um valor válido mesmo se a obra ainda não
-  // tiver essa coluna preenchida (bancos antigos, antes da migração).
   const closingPeriod = normalizeClosingPeriod(activeProject?.closing_period);
 
-  // ALTERAÇÃO: lista das segundas-feiras que compõem o período em tela.
-  // Ex.: semanal -> ["2026-08-03"]; quinzenal -> ["2026-08-03", "2026-08-10"].
   const periodWeekStarts = useMemo(
     () => getPeriodWeekStarts(periodStart, closingPeriod),
     [periodStart, closingPeriod]
@@ -115,12 +94,9 @@ export function AppProvider({ children }) {
     const periodEnd = addWorkingDays(normalizedStart, closingPeriod === "semanal" ? 6 : 12);
     if (reportStartDate !== normalizedStart) setReportStartDate(normalizedStart);
     if (reportEndDate !== periodEnd) setReportEndDate(periodEnd);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeProjectId, closingPeriod, homePeriodStart]);
+  }, [activeProjectId, closingPeriod, homePeriodStart, reportStartDate, reportEndDate]);
 
   // ---------- Carga inicial ----------
-  // ALTERAÇÃO: carrega obras e funcionários quando o usuário autentica (e limpa
-  // tudo no logout, para que outro login não veja dados em memória do anterior).
   const loadAll = useCallback(async () => {
     const [
       { data: projectRows, error: projectError },
@@ -176,11 +152,6 @@ export function AppProvider({ children }) {
   }, [activeProjectId]);
 
   // ---------- Realtime ----------
-  // ALTERAÇÃO: antes usava supabase.channel(...).on("postgres_changes"). Agora a
-  // API repassa as notificações do PostgreSQL (LISTEN/NOTIFY) por Server-Sent
-  // Events — ver lib/realtime.js. O formato do evento é o mesmo, então os
-  // tratadores abaixo continuam iguais. Mantemos UMA conexão aberta e lemos o
-  // período em tela por ref, para não reconectar a cada navegação de período.
   const reportWeekStartsRef = useRef(reportWeekStarts);
   useEffect(() => {
     reportWeekStartsRef.current = reportWeekStarts;
@@ -212,7 +183,6 @@ export function AppProvider({ children }) {
           });
         }
       },
-      // Voltou a conexão depois de uma queda: recarrega para não perder mudanças.
       onReconnect: () => {
         loadAll();
         setReloadTick((tick) => tick + 1);
@@ -234,8 +204,6 @@ export function AppProvider({ children }) {
       } else {
         const next = new Map();
         (data || []).forEach((record) => {
-          // ALTERAÇÃO: inclui record.week_start na chave para não misturar
-          // o "seg" da semana 1 com o "seg" da semana 2 num período quinzenal.
           next.set(attendanceKey(record.employee_id, record.week_start, record.day), record.status);
         });
         setAttendance(next);
@@ -246,12 +214,9 @@ export function AppProvider({ children }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportWeekStarts, isAuthenticated, reloadTick]);
+  }, [reportWeekStarts, isAuthenticated, reloadTick, showError]);
 
   // ---------- Obras ----------
-  // ALTERAÇÃO: addProject agora recebe também "closingPeriod" (semanal ou
-  // quinzenal), escolhido pelo usuário no ProjectForm, e repassa para a API.
   const addProject = useCallback(
     async (name, closingPeriod) => {
       const validationError = validateProjectName(name, projects);
@@ -278,8 +243,6 @@ export function AppProvider({ children }) {
     [projects, showError, showSuccess]
   );
 
-  // ALTERAÇÃO: editProject agora também recebe "closingPeriod", permitindo
-  // trocar o período de fechamento de uma obra já cadastrada.
   const editProject = useCallback(
     async (id, name, closingPeriod) => {
       const validationError = validateProjectName(name, projects, id);
@@ -477,13 +440,13 @@ export function AppProvider({ children }) {
   );
 
   // ---------- Frequência ----------
-  // ALTERAÇÃO: toggleAttendance agora recebe também "weekStart" (a semana
-  // específica daquela coluna), já que um período quinzenal mostra colunas
-  // de 2 semanas diferentes ao mesmo tempo. Antes só recebia (employeeId, day)
-  // porque só existia uma semana em tela.
   const toggleAttendance = useCallback(
     async (employeeId, weekStart, day) => {
       const key = attendanceKey(employeeId, weekStart, day);
+
+      // Previne requisições concorrentes na mesma célula em toques rápidos
+      if (pendingCells.has(key)) return;
+
       const current = attendance.get(key) || "absent";
       const nextStatus = ATTENDANCE_CYCLE[(ATTENDANCE_CYCLE.indexOf(current) + 1) % ATTENDANCE_CYCLE.length];
 
@@ -504,18 +467,13 @@ export function AppProvider({ children }) {
       });
 
       if (error) {
-        // reverte otimisticamente em caso de falha
         setAttendance((prev) => new Map(prev).set(key, current));
         showError("Não foi possível salvar a marcação. Tente novamente.");
       }
     },
-    [attendance, showError]
+    [attendance, pendingCells, showError]
   );
 
-  // ALTERAÇÃO: goToPreviousWeek/goToNextWeek viraram goToPreviousPeriod/
-  // goToNextPeriod e usam addPeriods (pula 1 semana no modo semanal, 2
-  // semanas no modo quinzenal) em vez de addWeeks fixo. goToCurrentWeek virou
-  // goToCurrentPeriod retorna ao início personalizado salvo pelo usuário.
   const goToPreviousPeriod = useCallback(
     () => setPeriodStart((current) => addPeriods(current, -1, closingPeriod)),
     [closingPeriod]
@@ -547,7 +505,7 @@ export function AppProvider({ children }) {
     try {
       localStorage.setItem(PERIOD_START_STORAGE_KEY, monday);
     } catch {
-      // The selected period remains active until the page is closed.
+      // Storage may be unavailable; selected period remains active until close.
     }
   }, [closingPeriod]);
 
@@ -564,10 +522,6 @@ export function AppProvider({ children }) {
   );
 
   // ---------- Derivados ----------
-  // ALTERAÇÃO: "activeProject" foi movido para cima (perto do topo do
-  // componente) — ver comentário lá. Removida a definição duplicada que
-  // existia aqui.
-
   const activeEmployees = useMemo(
     () => employees
       .filter((employee) => employee.project_id === activeProjectId)
@@ -588,8 +542,6 @@ export function AppProvider({ children }) {
     [projectExpenses]
   );
 
-  // ALTERAÇÃO: getAttendanceStatus e isCellPending agora recebem "weekStart"
-  // também, para bater com a nova assinatura de attendanceKey.
   const getAttendanceStatus = useCallback(
     (employeeId, weekStart, day) => attendance.get(attendanceKey(employeeId, weekStart, day)) || "absent",
     [attendance]
@@ -661,8 +613,6 @@ export function AppProvider({ children }) {
     activeProject,
     activeEmployees,
     setActiveProjectId,
-    // ALTERAÇÃO: expõe os novos nomes/conceitos de período no lugar de
-    // "weekStart" + goToPreviousWeek/goToNextWeek/goToCurrentWeek.
     periodStart,
     homePeriodStart,
     reportStartDate,
