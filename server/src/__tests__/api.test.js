@@ -1,6 +1,9 @@
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import request from "supertest";
-import { describe, expect, it, vi } from "vitest";
-import { parseCorsOrigins } from "../config.js";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { config, parseCorsOrigins } from "../config.js";
 
 vi.mock("../db.js", () => ({
   query: vi.fn(async (sql) => {
@@ -20,7 +23,24 @@ vi.mock("../db.js", () => ({
   withTransaction: vi.fn(),
 }));
 
-import app from "../app.js";
+let app;
+let frontendDist;
+const originalFrontendDist = process.env.FRONTEND_DIST;
+
+beforeAll(async () => {
+  frontendDist = await mkdtemp(path.join(os.tmpdir(), "conserpav-frontend-"));
+  await mkdir(path.join(frontendDist, "assets"));
+  await writeFile(path.join(frontendDist, "index.html"), "<!doctype html><title>SPA fixture</title>");
+  await writeFile(path.join(frontendDist, "assets", "app-hash.js"), "console.log('fixture')");
+  process.env.FRONTEND_DIST = frontendDist;
+  ({ default: app } = await import("../app.js"));
+});
+
+afterAll(async () => {
+  await rm(frontendDist, { recursive: true, force: true });
+  if (originalFrontendDist === undefined) delete process.env.FRONTEND_DIST;
+  else process.env.FRONTEND_DIST = originalFrontendDist;
+});
 
 describe("API Endpoints", () => {
   describe("CORS", () => {
@@ -31,21 +51,27 @@ describe("API Endpoints", () => {
       ]);
     });
 
-    it("recusa origem não permitida com 403 JSON", async () => {
+    it("recusa origem cruzada quando a allowlist está vazia", async () => {
       const res = await request(app).get("/api/health").set("Origin", "https://untrusted.example");
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe("CORS_ORIGIN_DENIED");
     });
 
-    it("responde preflight permitido com credenciais", async () => {
+    it("só habilita preflight cruzado para origens configuradas", async () => {
+      const allowedOrigin = config.corsOrigins[0];
       const res = await request(app)
         .options("/api/auth/me")
-        .set("Origin", "http://localhost:5173")
+        .set("Origin", allowedOrigin || "https://untrusted.example")
         .set("Access-Control-Request-Method", "GET");
 
-      expect(res.status).toBe(204);
-      expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
-      expect(res.headers["access-control-allow-credentials"]).toBe("true");
+      if (allowedOrigin) {
+        expect(res.status).toBe(204);
+        expect(res.headers["access-control-allow-origin"]).toBe(allowedOrigin);
+        expect(res.headers["access-control-allow-credentials"]).toBe("true");
+      } else {
+        expect(res.status).toBe(403);
+        expect(res.body.error.code).toBe("CORS_ORIGIN_DENIED");
+      }
     });
   });
 
@@ -54,6 +80,21 @@ describe("API Endpoints", () => {
       const res = await request(app).get("/api/health");
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ ok: true });
+    });
+  });
+
+  describe("Frontend SPA", () => {
+    it.each(["/", "/obras"])('serve index.html em "%s"', async (url) => {
+      const res = await request(app).get(url);
+      expect(res.status).toBe(200);
+      expect(res.text).toContain("SPA fixture");
+      expect(res.headers["cache-control"]).toBe("no-cache");
+    });
+
+    it("aplica cache imutável a assets versionados", async () => {
+      const res = await request(app).get("/assets/app-hash.js");
+      expect(res.status).toBe(200);
+      expect(res.headers["cache-control"]).toBe("public, max-age=31536000, immutable");
     });
   });
 
@@ -105,6 +146,17 @@ describe("API Endpoints", () => {
 
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe("CSRF_PROTECTION");
+    });
+
+    it("aceita mutação same-origin sem CORS_ORIGIN quando há cabeçalho CSRF", async () => {
+      const res = await request(app)
+        .post("/api/auth/logout")
+        .set("Host", "app.example")
+        .set("Origin", "http://app.example")
+        .set("X-Requested-With", "XMLHttpRequest");
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ ok: true });
     });
 
     it("responde 403 para Referer malformado sem gerar erro interno", async () => {

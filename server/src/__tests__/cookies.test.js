@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { getAuthCookieOptions } from "../cookies.js";
 
 describe("auth cookie options", () => {
-  it("uses cross-site secure attributes in production", () => {
+  it("uses same-site secure attributes in production", () => {
     expect(getAuthCookieOptions({ NODE_ENV: "production" })).toMatchObject({
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "lax",
       path: "/",
     });
   });
