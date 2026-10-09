@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     // Em desenvolvimento, encaminha /api para a API Node (server/), evitando CORS.
     proxy: {
-      "/api": { target: "http://localhost:3001", changeOrigin: true },
+      "/api": { target: "http://localhost:3001" },
     },
   },
   test: {

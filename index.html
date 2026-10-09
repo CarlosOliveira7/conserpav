@@ -30,14 +30,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <!-- ALTERAÇÃO: registra o service worker (public/sw.js) só em produção,
-         depois que a página carregar, para não atrapalhar o "npm run dev". -->
-    <script>
-      if ("serviceWorker" in navigator && !location.hostname.includes("localhost")) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
-        });
-      }
-    </script>
   </body>
 </html>
