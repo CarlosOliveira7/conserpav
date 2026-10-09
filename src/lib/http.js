@@ -1,4 +1,6 @@
-export const API_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
+import { API_BASE_URL, buildApiUrl } from "../api/config";
+
+export const API_URL = API_BASE_URL;
 
 /**
  * Faz uma requisição JSON enviando cookies httpOnly e o cabeçalho X-Requested-With (CSRF).
@@ -12,7 +14,7 @@ export async function request(method, path, body, { skipExpire = false } = {}) {
 
   let response;
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(buildApiUrl(path), {
       method,
       headers,
       credentials: "include",

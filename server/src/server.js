@@ -4,7 +4,7 @@ import { pool } from "./db.js";
 import { closeEvents, initEvents } from "./events.js";
 import { logger } from "./logger.js";
 
-const server = app.listen(config.port, () => {
+const server = app.listen(config.port, "0.0.0.0", () => {
   logger.info(`[api] rodando na porta ${config.port}`);
   initEvents();
 });

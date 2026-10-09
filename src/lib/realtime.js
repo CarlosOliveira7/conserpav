@@ -1,4 +1,4 @@
-import { API_URL } from "./http";
+import { buildApiUrl } from "../api/config";
 
 /**
  * Conexão SSE com a API (GET /events) que entrega alterações em tempo real via fetch + stream,
@@ -15,7 +15,7 @@ export function subscribeToChanges({ onChange, onReconnect }) {
     while (!stopped) {
       try {
         controller = new AbortController();
-        const response = await fetch(`${API_URL}/events`, {
+        const response = await fetch(buildApiUrl("/events"), {
           headers: {
             Accept: "text/event-stream",
             "X-Requested-With": "XMLHttpRequest",

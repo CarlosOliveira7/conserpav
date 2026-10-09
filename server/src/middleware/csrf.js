@@ -17,7 +17,13 @@ export function csrfProtection(req, _res, next) {
   // Verify origin if present
   const origin = req.headers.origin || req.headers.referer;
   if (origin) {
-    const originUrl = new URL(origin).origin;
+    let originUrl;
+    try {
+      originUrl = new URL(origin).origin;
+    } catch {
+      return next(new AppError(403, "CSRF_PROTECTION", "Origem não permitida pela proteção CSRF."));
+    }
+
     if (!config.corsOrigins.includes(originUrl)) {
       return next(new AppError(403, "CSRF_PROTECTION", "Origem não permitida pela proteção CSRF."));
     }

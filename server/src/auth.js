@@ -11,22 +11,11 @@ export function signToken(user) {
 }
 
 export function setAuthCookie(res, token) {
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 8 * 60 * 60 * 1000, // 8 hours
-    path: "/",
-  });
+  res.cookie(COOKIE_NAME, token, config.cookieOptions);
 }
 
 export function clearAuthCookie(res) {
-  res.clearCookie(COOKIE_NAME, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
+  res.clearCookie(COOKIE_NAME, config.cookieOptions);
 }
 
 /** Middleware: exige cookie httpOnly ou "Authorization: Bearer <jwt>" e preenche req.user. */

@@ -6,6 +6,7 @@ import { config } from "./config.js";
 import { csrfProtection } from "./middleware/csrf.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { globalLimiter } from "./middleware/rateLimit.js";
+import { logger } from "./logger.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import employeesRoutes from "./routes/employees.routes.js";
@@ -25,10 +26,24 @@ app.use(helmet());
 
 // CORS with credentials support
 app.use(
+  (req, res, next) => {
+    const origin = req.get("Origin");
+    if (!origin || config.corsOrigins.includes(origin.replace(/\/+$/, ""))) return next();
+
+    logger.warn({ origin, allowedOrigins: config.corsOrigins }, "[cors] origem recusada");
+    return res.status(403).json({
+      error: {
+        code: "CORS_ORIGIN_DENIED",
+        message: "A origem desta requisição não está autorizada.",
+      },
+    });
+  }
+);
+
+app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || config.corsOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("Origem não permitida pelo CORS"));
+      callback(null, !origin || config.corsOrigins.includes(origin.replace(/\/+$/, "")));
     },
     credentials: true,
   })

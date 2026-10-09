@@ -1,5 +1,6 @@
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
+import { parseCorsOrigins } from "../config.js";
 
 vi.mock("../db.js", () => ({
   query: vi.fn(async (sql) => {
@@ -22,6 +23,32 @@ vi.mock("../db.js", () => ({
 import app from "../app.js";
 
 describe("API Endpoints", () => {
+  describe("CORS", () => {
+    it("normaliza origens separadas por vírgula", () => {
+      expect(parseCorsOrigins(" https://front.example/ , , http://localhost:5173/// ")).toEqual([
+        "https://front.example",
+        "http://localhost:5173",
+      ]);
+    });
+
+    it("recusa origem não permitida com 403 JSON", async () => {
+      const res = await request(app).get("/api/health").set("Origin", "https://untrusted.example");
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("CORS_ORIGIN_DENIED");
+    });
+
+    it("responde preflight permitido com credenciais", async () => {
+      const res = await request(app)
+        .options("/api/auth/me")
+        .set("Origin", "http://localhost:5173")
+        .set("Access-Control-Request-Method", "GET");
+
+      expect(res.status).toBe(204);
+      expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
+      expect(res.headers["access-control-allow-credentials"]).toBe("true");
+    });
+  });
+
   describe("GET /api/health", () => {
     it("responde 200 com ok: true", async () => {
       const res = await request(app).get("/api/health");
@@ -75,6 +102,16 @@ describe("API Endpoints", () => {
       const res = await request(app)
         .post("/api/projects")
         .send({ name: "Obra Teste", closing_period: "quinzenal" });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("CSRF_PROTECTION");
+    });
+
+    it("responde 403 para Referer malformado sem gerar erro interno", async () => {
+      const res = await request(app)
+        .post("/api/auth/logout")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .set("Referer", "invalid-url");
 
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe("CSRF_PROTECTION");

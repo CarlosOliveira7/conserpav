@@ -1,4 +1,4 @@
-const CACHE_NAME = "conserpav-shell-v2";
+const CACHE_NAME = "conserpav-shell-v3";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -31,18 +31,27 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const networkFirst = request.mode === "navigate" || /\.(js|css)$/.test(url.pathname);
+
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cached = await cache.match(request);
-      const network = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200 && response.type === "basic") {
-            cache.put(request, response.clone());
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
+      const fetchAndCache = fetch(request).then((response) => {
+        if (response && response.status === 200 && response.type === "basic") {
+          cache.put(request, response.clone());
+        }
+        return response;
+      });
+
+      if (networkFirst) {
+        try {
+          return await fetchAndCache;
+        } catch {
+          return cached || Response.error();
+        }
+      }
+
+      return cached || fetchAndCache.catch(() => Response.error());
     })
   );
 });
