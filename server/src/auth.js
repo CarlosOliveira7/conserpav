@@ -15,7 +15,8 @@ export function setAuthCookie(res, token) {
 }
 
 export function clearAuthCookie(res) {
-  res.clearCookie(COOKIE_NAME, config.cookieOptions);
+  const { maxAge, ...clearOptions } = config.cookieOptions;
+  res.clearCookie(COOKIE_NAME, clearOptions);
 }
 
 /** Middleware: exige cookie httpOnly ou "Authorization: Bearer <jwt>" e preenche req.user. */

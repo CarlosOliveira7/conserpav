@@ -8,10 +8,9 @@ dotenv.config({ path: path.resolve(here, "../.env") });
 dotenv.config();
 
 const isTest = process.env.NODE_ENV === "test";
-const isProduction = process.env.NODE_ENV === "production";
 
 const required = (name) => {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
   if (!value) {
     if (isTest) {
       if (name === "DATABASE_URL") return "postgres://postgres:postgres@localhost:5432/test";
@@ -24,13 +23,8 @@ const required = (name) => {
 };
 
 const jwtSecret = required("JWT_SECRET");
-if (Buffer.byteLength(jwtSecret, "utf8") < 32) {
-  console.error("[config] JWT_SECRET deve ter pelo menos 32 bytes/caracteres de extensão.");
-  process.exit(1);
-}
-
-if (isProduction && !process.env.CORS_ORIGIN?.split(",").some((origin) => origin.trim())) {
-  console.error("[config] CORS_ORIGIN é obrigatória em produção e deve conter ao menos uma origem.");
+if (jwtSecret.length < 32) {
+  console.error("[config] JWT_SECRET deve ter pelo menos 32 caracteres.");
   process.exit(1);
 }
 
@@ -47,7 +41,7 @@ export const config = {
   databaseSsl: process.env.DATABASE_SSL === "true",
   jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
-  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN || "http://localhost:5173"),
+  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN),
   cookieOptions: getAuthCookieOptions(process.env),
   appUrl: (process.env.APP_URL || "http://localhost:5173").replace(/\/$/, ""),
   smtp: {

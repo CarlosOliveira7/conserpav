@@ -1,7 +1,7 @@
 export function getAuthCookieOptions(env = process.env) {
   const production = env.NODE_ENV === "production";
-  const secure = env.COOKIE_SECURE === undefined ? production : env.COOKIE_SECURE.toLowerCase() === "true";
-  const sameSite = (env.COOKIE_SAMESITE || (production ? "none" : "lax")).toLowerCase();
+  const secure = env.COOKIE_SECURE === undefined ? production : env.COOKIE_SECURE.trim().toLowerCase() === "true";
+  const sameSite = (env.COOKIE_SAMESITE || "lax").trim().toLowerCase();
   const options = {
     httpOnly: true,
     secure,

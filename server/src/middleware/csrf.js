@@ -14,7 +14,7 @@ export function csrfProtection(req, _res, next) {
     return next(new AppError(403, "CSRF_PROTECTION", "Cabeçalho CSRF ausente ou inválido."));
   }
 
-  // Verify origin if present
+  // Allow this deployment's own origin; the allowlist is only for split deployments.
   const origin = req.headers.origin || req.headers.referer;
   if (origin) {
     let originUrl;
@@ -24,7 +24,8 @@ export function csrfProtection(req, _res, next) {
       return next(new AppError(403, "CSRF_PROTECTION", "Origem não permitida pela proteção CSRF."));
     }
 
-    if (!config.corsOrigins.includes(originUrl)) {
+    const requestOrigin = `${req.protocol}://${req.get("host")}`;
+    if (originUrl !== requestOrigin && !config.corsOrigins.includes(originUrl)) {
       return next(new AppError(403, "CSRF_PROTECTION", "Origem não permitida pela proteção CSRF."));
     }
   }
