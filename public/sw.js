@@ -1,4 +1,4 @@
-const CACHE_NAME = "conserpav-shell-v3";
+const CACHE_NAME = "conserpav-shell-v4";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
