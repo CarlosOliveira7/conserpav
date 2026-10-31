@@ -5,6 +5,8 @@ import Input from "./Input";
 import Select from "./Select";
 import { useApp } from "../context/AppContext";
 
+import Alert from "./Alert";
+
 export default function EditEmployeeModal({ employee, onClose }) {
   const { projects, editEmployee, savingEmployee } = useApp();
   const [form, setForm] = useState({
@@ -14,14 +16,22 @@ export default function EditEmployeeModal({ employee, onClose }) {
     projectId: employee.project_id,
     pixKey: employee.pix_key,
   });
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const updateField = (field) => (event) =>
+  const updateField = (field) => (event) => {
+    if (errorMsg) setErrorMsg("");
     setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setErrorMsg("");
     const result = await editEmployee(employee.id, form);
-    if (result.ok) onClose();
+    if (result.ok) {
+      onClose();
+    } else if (result.error?.message) {
+      setErrorMsg(result.error.message);
+    }
   };
 
   return (
@@ -39,6 +49,9 @@ export default function EditEmployeeModal({ employee, onClose }) {
         </div>
       )}
     >
+      {errorMsg && (
+        <Alert variant="error" message={errorMsg} onClose={() => setErrorMsg("")} />
+      )}
       <form id="edit-employee-form" onSubmit={handleSubmit}>
         <div className="form-grid">
           <Field label="Nome completo" htmlFor="edit-employee-name" className="span-2" required>

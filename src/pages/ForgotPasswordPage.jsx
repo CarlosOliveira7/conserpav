@@ -3,25 +3,70 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import Field from "../components/Field";
 import Input from "../components/Input";
+import Alert from "../components/Alert";
 import "./ForgotPasswordPage.css";
 
 export default function ForgotPasswordPage() {
   const { resetPassword, confirmPasswordReset, loading } = useAuth();
   const { showError, showSuccess } = useToast();
+
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Estados de feedback visual
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const params = new URLSearchParams(window.location.search);
   const resetToken = params.get("token") || "";
   const isResetMode = params.get("recover") === "true" && Boolean(resetToken);
   const isFormDisabled = isLoading || loading;
 
+  const handleEmailChange = (val) => {
+    setEmail(val);
+    if (formError) setFormError("");
+    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
+  };
+
+  const handleNewPasswordChange = (val) => {
+    setNewPassword(val);
+    if (formError) setFormError("");
+    if (fieldErrors.newPassword) setFieldErrors((prev) => ({ ...prev, newPassword: "" }));
+  };
+
+  const handleConfirmPasswordChange = (val) => {
+    setConfirmPassword(val);
+    if (formError) setFormError("");
+    if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+  };
+
   const handleRequestReset = async (event) => {
     event.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+    setFieldErrors({ email: "", newPassword: "", confirmPassword: "" });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
-      showError("Preencha seu e-mail");
+      const msg = "Preencha seu e-mail";
+      setFormError(msg);
+      setFieldErrors((prev) => ({ ...prev, email: msg }));
+      showError(msg);
+      return;
+    }
+
+    if (!emailRegex.test(email.trim())) {
+      const msg = "Informe um e-mail válido";
+      setFormError(msg);
+      setFieldErrors((prev) => ({ ...prev, email: msg }));
+      showError(msg);
       return;
     }
 
@@ -29,11 +74,19 @@ export default function ForgotPasswordPage() {
     try {
       const result = await resetPassword(email);
       if (result.ok) {
-        showSuccess("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+        const msg = "E-mail de recuperação enviado! Verifique sua caixa de entrada.";
+        setFormSuccess(msg);
+        showSuccess(msg);
         setEmail("");
       } else {
-        showError(result.error?.message || "Erro ao enviar e-mail de recuperação");
+        const errorMsg = result.error?.message || "Erro ao enviar e-mail de recuperação";
+        setFormError(errorMsg);
+        showError(errorMsg);
       }
+    } catch (err) {
+      const errorMsg = err.message || "Erro de conexão com o servidor.";
+      setFormError(errorMsg);
+      showError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -41,16 +94,30 @@ export default function ForgotPasswordPage() {
 
   const handleResetPassword = async (event) => {
     event.preventDefault();
-    if (!newPassword || !confirmPassword) {
-      showError("Preencha os campos de senha");
-      return;
+    setFormError("");
+    setFormSuccess("");
+    const nextErrors = { email: "", newPassword: "", confirmPassword: "" };
+    let hasError = false;
+
+    if (!newPassword) {
+      nextErrors.newPassword = "Preencha a nova senha";
+      hasError = true;
+    } else if (newPassword.length < 8) {
+      nextErrors.newPassword = "A senha deve ter pelo menos 8 caracteres";
+      hasError = true;
     }
-    if (newPassword !== confirmPassword) {
-      showError("As senhas não conferem");
-      return;
+
+    if (!confirmPassword) {
+      nextErrors.confirmPassword = "Confirme a nova senha";
+      hasError = true;
+    } else if (newPassword !== confirmPassword) {
+      nextErrors.confirmPassword = "As senhas não conferem";
+      hasError = true;
     }
-    if (newPassword.length < 6) {
-      showError("Senha deve ter pelo menos 6 caracteres");
+
+    if (hasError) {
+      setFieldErrors(nextErrors);
+      setFormError("Por favor, corrija os erros nos campos.");
       return;
     }
 
@@ -58,13 +125,21 @@ export default function ForgotPasswordPage() {
     try {
       const result = await confirmPasswordReset(resetToken, newPassword);
       if (result.ok) {
-        showSuccess("Senha atualizada com sucesso! Redirecionando...");
+        const msg = "Senha atualizada com sucesso! Redirecionando para o login...";
+        setFormSuccess(msg);
+        showSuccess(msg);
         window.setTimeout(() => {
           window.location.href = "/";
         }, 1500);
       } else {
-        showError(result.error?.message || "Erro ao atualizar senha");
+        const errorMsg = result.error?.message || "Erro ao atualizar senha";
+        setFormError(errorMsg);
+        showError(errorMsg);
       }
+    } catch (err) {
+      const errorMsg = err.message || "Erro de conexão com o servidor.";
+      setFormError(errorMsg);
+      showError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -79,21 +154,43 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="forgot-card">
+          {formError && (
+            <Alert
+              variant="error"
+              message={formError}
+              onClose={() => setFormError("")}
+            />
+          )}
+
+          {formSuccess && (
+            <Alert
+              variant="success"
+              message={formSuccess}
+              onClose={() => setFormSuccess("")}
+            />
+          )}
+
           {!isResetMode ? (
             <>
               <p className="forgot-description">
                 Digite seu e-mail para receber um link de recuperação de senha.
               </p>
-              <form className="forgot-form" onSubmit={handleRequestReset}>
-                <Field label="E-mail" htmlFor="recovery-email" required>
+              <form className="forgot-form" onSubmit={handleRequestReset} noValidate>
+                <Field
+                  label="E-mail"
+                  htmlFor="recovery-email"
+                  required
+                  error={fieldErrors.email}
+                >
                   <Input
                     id="recovery-email"
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => handleEmailChange(event.target.value)}
                     disabled={isFormDisabled}
                     autoComplete="email"
+                    error={Boolean(fieldErrors.email)}
                     required
                   />
                 </Field>
@@ -107,31 +204,46 @@ export default function ForgotPasswordPage() {
               <p className="forgot-description">
                 Digite sua nova senha para recuperar acesso à sua conta.
               </p>
-              <form className="forgot-form" onSubmit={handleResetPassword}>
-                <Field label="Nova senha" htmlFor="new-password" required>
+              <form className="forgot-form" onSubmit={handleResetPassword} noValidate>
+                <Field
+                  label="Nova senha"
+                  htmlFor="new-password"
+                  hint="Mínimo de 8 caracteres"
+                  required
+                  error={fieldErrors.newPassword}
+                >
                   <Input
                     id="new-password"
                     type="password"
-                    placeholder="••••••"
+                    placeholder="Mínimo 8 caracteres"
                     value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
+                    onChange={(event) => handleNewPasswordChange(event.target.value)}
                     disabled={isFormDisabled}
                     autoComplete="new-password"
+                    error={Boolean(fieldErrors.newPassword)}
                     required
                   />
                 </Field>
-                <Field label="Confirmar senha" htmlFor="confirm-password" required>
+
+                <Field
+                  label="Confirmar senha"
+                  htmlFor="confirm-password"
+                  required
+                  error={fieldErrors.confirmPassword}
+                >
                   <Input
                     id="confirm-password"
                     type="password"
-                    placeholder="••••••"
+                    placeholder="Repita a senha"
                     value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    onChange={(event) => handleConfirmPasswordChange(event.target.value)}
                     disabled={isFormDisabled}
                     autoComplete="new-password"
+                    error={Boolean(fieldErrors.confirmPassword)}
                     required
                   />
                 </Field>
+
                 <button type="submit" className="forgot-button" disabled={isFormDisabled}>
                   {isLoading ? "Atualizando…" : "Atualizar senha"}
                 </button>
@@ -140,7 +252,9 @@ export default function ForgotPasswordPage() {
           )}
 
           <div className="forgot-back">
-            <a href="/" className="back-link">← Voltar para login</a>
+            <a href="/" className="back-link">
+              ← Voltar para login
+            </a>
           </div>
         </div>
       </div>

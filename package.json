@@ -11,10 +11,12 @@
     "test": "vitest run && npm --prefix server test",
     "dev:api": "npm --prefix server run dev",
     "db:migrate": "npm --prefix server run db:migrate",
+    "db:seed": "npm --prefix server run db:seed",
     "user:create": "npm --prefix server run user:create --",
     "install:all": "npm install && npm --prefix server install"
   },
   "dependencies": {
+    "@railway/cli": "^5.64.1",
     "lucide-react": "^0.441.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

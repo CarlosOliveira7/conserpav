@@ -18,6 +18,7 @@ import expensesRoutes from "./routes/expenses.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import reportsRoutes from "./routes/reports.routes.js";
+import usersRoutes from "./routes/users.routes.js";
 
 const app = express();
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -96,6 +97,7 @@ app.use("/api", csrfProtection);
 // Routes
 app.use("/api", healthRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
 app.use("/api", eventsRoutes);
 app.use("/api/projects", projectsRoutes);
 app.use("/api/employees", employeesRoutes);

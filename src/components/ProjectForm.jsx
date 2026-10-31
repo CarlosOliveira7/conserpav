@@ -15,13 +15,22 @@ export default function ProjectForm() {
   const { addProject, savingProject } = useApp();
   const [name, setName] = useState("");
   const [closingPeriod, setClosingPeriod] = useState(DEFAULT_CLOSING_PERIOD);
+  const [formError, setFormError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setFormError("");
     const result = await addProject(name, closingPeriod);
     if (result.ok) {
       setName("");
+    } else if (result.error?.message) {
+      setFormError(result.error.message);
     }
+  };
+
+  const handleNameChange = (val) => {
+    setName(val);
+    if (formError) setFormError("");
   };
 
   return (
@@ -32,15 +41,22 @@ export default function ProjectForm() {
       </p>
 
       <div className="form-grid">
-        <Field label="Nome da obra" htmlFor="project-name" className="span-2" required>
+        <Field
+          label="Nome da obra"
+          htmlFor="project-name"
+          className="span-2"
+          required
+          error={formError}
+        >
           <Input
             id="project-name"
             type="text"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => handleNameChange(event.target.value)}
             placeholder="Ex.: Edifício Aurora"
             required
             maxLength={80}
+            error={Boolean(formError)}
           />
         </Field>
 

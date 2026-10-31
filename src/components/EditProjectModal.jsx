@@ -17,11 +17,22 @@ export default function EditProjectModal({ project, onClose }) {
   const [closingPeriod, setClosingPeriod] = useState(
     normalizeClosingPeriod(project.closing_period)
   );
+  const [formError, setFormError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setFormError("");
     const result = await editProject(project.id, name, closingPeriod);
-    if (result.ok) onClose();
+    if (result.ok) {
+      onClose();
+    } else if (result.error?.message) {
+      setFormError(result.error.message);
+    }
+  };
+
+  const handleNameChange = (val) => {
+    setName(val);
+    if (formError) setFormError("");
   };
 
   return (
@@ -41,14 +52,21 @@ export default function EditProjectModal({ project, onClose }) {
     >
       <form id="edit-project-form" onSubmit={handleSubmit}>
         <div className="form-grid">
-          <Field label="Nome da obra" htmlFor="edit-project-name" className="span-2" required>
+          <Field
+            label="Nome da obra"
+            htmlFor="edit-project-name"
+            className="span-2"
+            required
+            error={formError}
+          >
             <Input
               id="edit-project-name"
               type="text"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => handleNameChange(event.target.value)}
               required
               maxLength={80}
+              error={Boolean(formError)}
             />
           </Field>
 

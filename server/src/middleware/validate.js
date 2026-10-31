@@ -7,7 +7,8 @@ import { AppError } from "../errors/AppError.js";
  * @param {import("zod").ZodSchema} [schemas.query]
  * @param {import("zod").ZodSchema} [schemas.params]
  */
-export function validate(schemas) {
+export function validate(schemas, options = {}) {
+  const errorCode = options.errorCode || "VALIDATION_ERROR";
   return (req, _res, next) => {
     try {
       if (schemas.body) {
@@ -25,7 +26,7 @@ export function validate(schemas) {
         const issue = err.issues[0];
         const fieldName = issue.path.join(".");
         const message = fieldName ? `${fieldName}: ${issue.message}` : issue.message || "Dados de entrada inválidos.";
-        return next(new AppError(400, "VALIDATION_ERROR", message));
+        return next(new AppError(400, errorCode, message));
       }
       next(err);
     }

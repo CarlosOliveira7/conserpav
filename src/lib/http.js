@@ -37,8 +37,14 @@ export async function request(method, path, body, { skipExpire = false } = {}) {
     if (response.status === 401 && !skipExpire) {
       window.dispatchEvent(new Event("auth:expired"));
     }
-    const errorMessage = payload?.error?.message || (typeof payload?.error === "string" ? payload.error : "Erro ao comunicar com o servidor.");
-    return { data: null, error: new Error(errorMessage) };
+    const errorMessage =
+      payload?.error?.message ||
+      (typeof payload?.error === "string" ? payload.error : "Erro ao comunicar com o servidor.");
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    error.code = payload?.error?.code || (response.status === 401 ? "UNAUTHORIZED" : "API_ERROR");
+    error.details = payload?.error?.details;
+    return { data: null, error };
   }
 
   return { data: payload, error: null };

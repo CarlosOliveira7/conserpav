@@ -230,8 +230,8 @@ export function AppProvider({ children }) {
       setSavingProject(false);
 
       if (error) {
-        showError("Não foi possível cadastrar a obra. Tente novamente.");
-        return { ok: false };
+        showError(error.message || "Não foi possível cadastrar a obra. Tente novamente.");
+        return { ok: false, error };
       }
 
       setProjects((current) => upsertById(current, data));
@@ -248,7 +248,7 @@ export function AppProvider({ children }) {
       const validationError = validateProjectName(name, projects, id);
       if (validationError) {
         showError(validationError);
-        return { ok: false };
+        return { ok: false, error: new Error(validationError) };
       }
 
       setSavingProject(true);
@@ -256,8 +256,8 @@ export function AppProvider({ children }) {
       setSavingProject(false);
 
       if (error) {
-        showError("Não foi possível atualizar a obra. Tente novamente.");
-        return { ok: false };
+        showError(error.message || "Não foi possível atualizar a obra. Tente novamente.");
+        return { ok: false, error };
       }
 
       setProjects((current) => upsertById(current, data));
@@ -271,8 +271,8 @@ export function AppProvider({ children }) {
     async (id) => {
       const { error } = await api.deleteProject(id);
       if (error) {
-        showError("Não foi possível excluir esta obra. Tente novamente.");
-        return { ok: false };
+        showError(error.message || "Não foi possível excluir esta obra. Tente novamente.");
+        return { ok: false, error };
       }
 
       setProjects((current) => current.filter((project) => project.id !== id));
@@ -289,7 +289,7 @@ export function AppProvider({ children }) {
       const validationError = validateEmployee(payload, employees);
       if (validationError) {
         showError(validationError);
-        return { ok: false };
+        return { ok: false, error: new Error(validationError) };
       }
 
       setSavingEmployee(true);
@@ -297,8 +297,8 @@ export function AppProvider({ children }) {
       setSavingEmployee(false);
 
       if (error) {
-        showError("Não foi possível cadastrar o funcionário. Tente novamente.");
-        return { ok: false };
+        showError(error.message || "Não foi possível cadastrar o funcionário. Tente novamente.");
+        return { ok: false, error };
       }
 
       setEmployees((current) => upsertById(current, data));
@@ -314,7 +314,7 @@ export function AppProvider({ children }) {
       const validationError = validateEmployee(payload, employees, id);
       if (validationError) {
         showError(validationError);
-        return { ok: false };
+        return { ok: false, error: new Error(validationError) };
       }
 
       setSavingEmployee(true);
@@ -322,8 +322,8 @@ export function AppProvider({ children }) {
       setSavingEmployee(false);
 
       if (error) {
-        showError("Não foi possível atualizar o funcionário. Tente novamente.");
-        return { ok: false };
+        showError(error.message || "Não foi possível atualizar o funcionário. Tente novamente.");
+        return { ok: false, error };
       }
 
       setEmployees((current) => upsertById(current, data));
@@ -337,8 +337,8 @@ export function AppProvider({ children }) {
     async (id) => {
       const { error } = await api.deleteEmployee(id);
       if (error) {
-        showError("Não foi possível excluir este funcionário. Tente novamente.");
-        return { ok: false };
+        showError(error.message || "Não foi possível excluir este funcionário. Tente novamente.");
+        return { ok: false, error };
       }
 
       setEmployees((current) => current.filter((employee) => employee.id !== id));
@@ -468,7 +468,7 @@ export function AppProvider({ children }) {
 
       if (error) {
         setAttendance((prev) => new Map(prev).set(key, current));
-        showError("Não foi possível salvar a marcação. Tente novamente.");
+        showError(error.message || "Não foi possível salvar a marcação. Tente novamente.");
       }
     },
     [attendance, pendingCells, showError]

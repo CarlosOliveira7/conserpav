@@ -34,23 +34,52 @@ export function AuthProvider({ children }) {
     setError(null);
 
     if (!email.trim()) {
-      setError("Preencha o e-mail");
-      return { ok: false };
+      const msg = "Preencha o e-mail";
+      setError(msg);
+      return { ok: false, error: { code: "VALIDATION_ERROR", message: msg } };
     }
     if (!password) {
-      setError("Preencha a senha");
-      return { ok: false };
+      const msg = "Preencha a senha";
+      setError(msg);
+      return { ok: false, error: { code: "VALIDATION_ERROR", message: msg } };
     }
 
     const { data, error: signInError } = await api.signInWithPassword(email, password);
     if (signInError || !data?.user) {
       const msg = signInError?.message || "Erro ao fazer login";
       setError(msg);
-      return { ok: false, error: { message: msg } };
+      return {
+        ok: false,
+        error: signInError || { code: "INVALID_CREDENTIALS", message: msg },
+      };
     }
 
     setUser(data.user);
-    return { ok: true };
+    return { ok: true, user: data.user };
+  }, []);
+
+  const register = useCallback(async (email, password) => {
+    setError(null);
+
+    if (!email.trim()) {
+      const msg = "Preencha o e-mail";
+      setError(msg);
+      return { ok: false, error: { code: "VALIDATION_ERROR", message: msg } };
+    }
+    if (!password || password.length < 8) {
+      const msg = "A senha deve ter pelo menos 8 caracteres";
+      setError(msg);
+      return { ok: false, error: { code: "VALIDATION_ERROR", message: msg } };
+    }
+
+    const { data, error: registerError } = await api.registerUser(email, password);
+    if (registerError) {
+      const msg = registerError.message || "Erro ao criar conta";
+      setError(msg);
+      return { ok: false, error: registerError };
+    }
+
+    return { ok: true, data };
   }, []);
 
   const logout = useCallback(async () => {
@@ -96,6 +125,7 @@ export function AuthProvider({ children }) {
     loading,
     error,
     login,
+    register,
     logout,
     resetPassword,
     confirmPasswordReset,

@@ -4,8 +4,13 @@ import bcrypt from "bcryptjs";
 import { pool } from "../src/db.js";
 
 const [email, password] = process.argv.slice(2);
-if (!email || !password || password.length < 8) {
-  console.error("Uso: npm run user:create -- <email> <senha com 8+ caracteres>");
+function isValidEmail(emailStr) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return typeof emailStr === "string" && emailRegex.test(emailStr.trim());
+}
+
+if (!email || !isValidEmail(email) || !password || password.length < 8) {
+  console.error("Uso: npm run user:create -- <email válido> <senha com 8+ caracteres>");
   process.exit(1);
 }
 

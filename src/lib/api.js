@@ -131,6 +131,12 @@ export function signInWithPassword(email, password) {
   );
 }
 
+export function registerUser(email, password) {
+  return run(
+    request("POST", "/users", { email: email.trim().toLowerCase(), password }, { skipExpire: true })
+  );
+}
+
 export function fetchCurrentUser() {
   return request("GET", "/auth/me");
 }

@@ -6,12 +6,21 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { config, parseCorsOrigins } from "../config.js";
 
 vi.mock("../db.js", () => ({
-  query: vi.fn(async (sql) => {
+  query: vi.fn(async (sql, params) => {
     if (sql.includes("SELECT 1")) {
       return { rows: [{ "?column?": 1 }] };
     }
     if (sql.includes("FROM users WHERE lower(email)")) {
+      if (params && params[0] === "duplicado@conserpav.com.br") {
+        return { rows: [{ id: "existing-id", email: "duplicado@conserpav.com.br" }] };
+      }
       return { rows: [] };
+    }
+    if (sql.includes("INSERT INTO users")) {
+      return { rows: [{ id: "new-user-id", email: params[0], created_at: "2026-01-01T00:00:00Z" }] };
+    }
+    if (sql.includes("INSERT INTO proprietarios")) {
+      return { rows: [], rowCount: 1 };
     }
     return { rows: [], rowCount: 0 };
   }),
@@ -129,6 +138,64 @@ describe("API Endpoints", () => {
 
       expect(res.status).toBe(401);
       expect(res.body.error.code).toBe("INVALID_CREDENTIALS");
+    });
+  });
+
+  describe("POST /api/users - Cadastro de Usuários", () => {
+    it("rejeita requisição com campos obrigatórios ausentes (400)", async () => {
+      const res = await request(app)
+        .post("/api/users")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBeDefined();
+      expect(res.body.error.code).toBe("INVALID_INPUT");
+    });
+
+    it("rejeita e-mail com formato inválido (400)", async () => {
+      const res = await request(app)
+        .post("/api/users")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .send({ email: "formato-invalido", password: "senhaForte123" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("INVALID_INPUT");
+      expect(res.body.error.message).toContain("E-mail inválido");
+    });
+
+    it("rejeita senha menor que 8 caracteres (400)", async () => {
+      const res = await request(app)
+        .post("/api/users")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .send({ email: "usuario@conserpav.com.br", password: "123" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("INVALID_INPUT");
+      expect(res.body.error.message).toContain("8 caracteres");
+    });
+
+    it("rejeita cadastro de e-mail já existente (409)", async () => {
+      const res = await request(app)
+        .post("/api/users")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .send({ email: "duplicado@conserpav.com.br", password: "senhaForte123" });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe("USER_ALREADY_EXISTS");
+      expect(res.body.error.message).toContain("já está cadastrado");
+    });
+
+    it("cadastra novo usuário com sucesso e gera hash seguro (201)", async () => {
+      const res = await request(app)
+        .post("/api/users")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .send({ email: "novo@conserpav.com.br", password: "senhaForte123" });
+
+      expect(res.status).toBe(201);
+      expect(res.body.user).toBeDefined();
+      expect(res.body.user.email).toBe("novo@conserpav.com.br");
+      expect(res.body.user.password_hash).toBeUndefined();
     });
   });
 

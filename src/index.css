@@ -751,6 +751,80 @@ button:active:not(:disabled) {
   border-color: var(--red);
 }
 
+/* ---------- Componente Padronizado de Alerta/Banner (.app-alert) ---------- */
+.app-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--field-radius, 6px);
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+.app-alert-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.app-alert-content {
+  flex: 1;
+}
+
+.app-alert-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.app-alert-message {
+  font-size: 0.875rem;
+}
+
+.app-alert-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.app-alert-close:hover {
+  opacity: 1;
+}
+
+.app-alert-error {
+  background-color: var(--tint-danger-bg);
+  border-color: var(--tint-danger-border);
+  color: var(--tint-danger-text);
+}
+
+.app-alert-success {
+  background-color: var(--tint-success-bg);
+  border-color: var(--tint-count-border);
+  color: var(--tint-success-text);
+}
+
+.app-alert-warning {
+  background-color: var(--tint-warning-bg);
+  border-color: var(--tint-warning-fill);
+  color: var(--tint-warning-text);
+}
+
+.app-alert-info {
+  background-color: var(--surface-alt);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
 /* ---------- Select Nativo Padronizado ---------- */
 .select-wrapper {
   position: relative;

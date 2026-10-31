@@ -5,11 +5,14 @@ import Field from "./Field";
 import Input from "./Input";
 import Select from "./Select";
 
+import Alert from "./Alert";
+
 const EMPTY_FORM = { name: "", role: "", dailyRate: "", projectId: "", pixKey: "" };
 
 export default function EmployeeForm({ onCreated }) {
   const { projects, activeProjectId, addEmployee, savingEmployee } = useApp();
   const [form, setForm] = useState(() => ({ ...EMPTY_FORM, projectId: activeProjectId || "" }));
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Mantém a obra do formulário alinhada com a obra selecionada na chamada.
   useEffect(() => {
@@ -18,11 +21,14 @@ export default function EmployeeForm({ onCreated }) {
     }
   }, [activeProjectId]);
 
-  const updateField = (field) => (event) =>
+  const updateField = (field) => (event) => {
+    if (errorMsg) setErrorMsg("");
     setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setErrorMsg("");
 
     if (!projects.length) {
       return;
@@ -32,6 +38,8 @@ export default function EmployeeForm({ onCreated }) {
     if (result.ok) {
       onCreated?.(result.employee);
       setForm({ ...EMPTY_FORM, projectId: form.projectId });
+    } else if (result.error?.message) {
+      setErrorMsg(result.error.message);
     }
   };
 
@@ -41,6 +49,10 @@ export default function EmployeeForm({ onCreated }) {
       <p className="form-helper">
         Informe a função, a diária e a chave Pix que serão usadas no fechamento.
       </p>
+
+      {errorMsg && (
+        <Alert variant="error" message={errorMsg} onClose={() => setErrorMsg("")} />
+      )}
 
       {!projects.length && (
         <p className="inline-warning">Cadastre uma obra antes de adicionar funcionários.</p>
