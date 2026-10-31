@@ -39,7 +39,10 @@ async function seed() {
 
   console.log(`[seed] Verificando existência do usuário admin (${maskEmail(normalizedEmail)})...`);
 
-  // 1. Verifica se o usuário já existe para evitar erro de unique constraint
+  // 1. Gera o hash bcrypt da senha fornecida
+  const passwordHash = await bcrypt.hash(passwordInput, 12);
+
+  // 2. Verifica se o usuário já existe para evitar erro de unique constraint
   const { rows: existingUsers } = await pool.query(
     "SELECT id, email FROM users WHERE lower(email) = lower($1)",
     [normalizedEmail]
@@ -47,7 +50,13 @@ async function seed() {
 
   if (existingUsers.length > 0) {
     const existingUser = existingUsers[0];
-    console.log(`ℹ Usuário admin (${maskEmail(existingUser.email)}) já cadastrado no banco.`);
+    console.log(`ℹ Usuário admin (${maskEmail(existingUser.email)}) já cadastrado no banco. Atualizando senha...`);
+
+    // Atualiza a senha existente para garantir que as credenciais do seed funcionem
+    await pool.query(
+      "UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2",
+      [passwordHash, existingUser.id]
+    );
 
     // Garante que o registro em proprietários existe
     await pool.query(
@@ -55,12 +64,10 @@ async function seed() {
       [existingUser.id, "Conserpav Engenharia"]
     );
 
-    console.log("✔ Seed concluído com sucesso (nenhuma duplicação gerada).");
+    console.log(`✔ Senha do usuário admin redefinida com sucesso: ${maskEmail(existingUser.email)}`);
+    console.log("✔ Seed concluído com sucesso.");
     return;
   }
-
-  // 2. Se não existir, criptografa a senha com bcrypt (12 rounds)
-  const passwordHash = await bcrypt.hash(passwordInput, 12);
 
   // 3. Insere o usuário na tabela users
   const { rows: newUsers } = await pool.query(
